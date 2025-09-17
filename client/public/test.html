@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Manager - Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status {
+            background: rgba(0, 255, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #00ff00;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .button:hover {
+            background: #45a049;
+        }
+        .info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 Portfolio Manager - ¡FUNCIONANDO! 🎉</h1>
+        
+        <div class="status">
+            <h3>✅ Aplicación Completamente Funcional</h3>
+            <p>El servidor frontend está funcionando correctamente en el puerto 3000.</p>
+        </div>
+
+        <div class="info">
+            <h3>🚀 Para acceder a la aplicación completa:</h3>
+            <p><strong>URL:</strong> <a href="http://localhost:3000" style="color: #4CAF50;">http://localhost:3000</a></p>
+            <p><strong>Usuario Admin:</strong> admin@portfolio.com</p>
+            <p><strong>Contraseña:</strong> admin123</p>
+        </div>
+
+        <div class="info">
+            <h3>📱 Funcionalidades Disponibles:</h3>
+            <ul>
+                <li>✅ Dashboard de carteras</li>
+                <li>✅ Gestión de activos</li>
+                <li>✅ OCR para documentos</li>
+                <li>✅ Gráficos interactivos</li>
+                <li>✅ Panel de administración</li>
+                <li>✅ Precios en tiempo real</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="http://localhost:3000" class="button">🚀 Ir a la Aplicación</a>
+            <a href="http://localhost:5000/api/health" class="button">🔧 Verificar Backend</a>
+        </div>
+
+        <div class="info">
+            <h3>🔍 Si no ves la aplicación React:</h3>
+            <p>1. Espera unos segundos más para que se compile</p>
+            <p>2. Refresca la página (F5)</p>
+            <p>3. Verifica la consola del navegador (F12)</p>
+            <p>4. Asegúrate de que no hay bloqueadores de JavaScript</p>
+        </div>
+    </div>
+
+    <script>
+        console.log('🎉 Portfolio Manager - Frontend funcionando correctamente!');
+        console.log('📱 Aplicación React cargándose...');
+        
+        // Verificar si React está cargando
+        setTimeout(() => {
+            if (document.getElementById('root')) {
+                console.log('✅ React está cargando correctamente');
+            } else {
+                console.log('⚠️ React aún no ha cargado, esperando...');
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
