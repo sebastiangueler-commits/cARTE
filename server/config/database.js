@@ -1,22 +1,23 @@
-const { Pool } = require('pg');
-require('dotenv').config();
+// Use SQLite for development, PostgreSQL for production
+const { db, initializeDatabase } = require('./sqlite-schema');
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'investment_portfolio',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'password',
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
-
-// Test database connection
-pool.on('connect', () => {
-  console.log('Connected to PostgreSQL database');
-});
-
-pool.on('error', (err) => {
-  console.error('Database connection error:', err);
-});
+// Create a pool-like interface for SQLite
+const pool = {
+  query: (text, params = []) => {
+    return new Promise((resolve, reject) => {
+      if (text.trim().toLowerCase().startsWith('select')) {
+        db.all(text, params, (err, rows) => {
+          if (err) reject(err);
+          else resolve({ rows });
+        });
+      } else {
+        db.run(text, params, function(err) {
+          if (err) reject(err);
+          else resolve({ rows: [{ id: this.lastID }] });
+        });
+      }
+    });
+  }
+};
 
 module.exports = pool;

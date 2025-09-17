@@ -1,9 +1,9 @@
-const { initializeDatabase } = require('./config/schema');
+const { initializeDatabase } = require('./config/sqlite-schema');
 
 // Initialize database on startup
 const startServer = async () => {
   try {
-    console.log('Initializing database...');
+    console.log('Initializing SQLite database...');
     await initializeDatabase();
     console.log('Database initialized successfully');
     
