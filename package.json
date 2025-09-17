@@ -1,0 +1,19 @@
+{
+  "name": "investment-portfolio-manager",
+  "version": "1.0.0",
+  "description": "Professional investment portfolio management application",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "install-all": "npm install && cd server && npm install && cd ../client && npm install"
+  },
+  "keywords": ["investment", "portfolio", "finance", "react", "nodejs"],
+  "author": "Investment Portfolio Manager",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
