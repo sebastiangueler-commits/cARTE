@@ -13,8 +13,37 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'portfolio-manager-secret-key-2024';
 
-// Middleware
-app.use(cors());
+// Middleware - CORS configurado para acceso móvil
+app.use(cors({
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Lista de orígenes permitidos
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:5000',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5000'
+    ];
+    
+    // Permitir cualquier IP local (para acceso móvil)
+    if (origin.match(/^http:\/\/192\.168\.\d+\.\d+:\d+$/) || 
+        origin.match(/^http:\/\/10\.\d+\.\d+\.\d+:\d+$/) ||
+        origin.match(/^http:\/\/172\.(1[6-9]|2\d|3[01])\.\d+\.\d+:\d+$/)) {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(__dirname));
@@ -1210,9 +1239,11 @@ app.use((error, req, res, next) => {
 });
 
 // Iniciar servidor
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Portfolio Manager ejecutándose en puerto ${PORT}`);
-  console.log(`🌐 Accede a: http://localhost:${PORT}`);
+  console.log(`🌐 Acceso local: http://localhost:${PORT}`);
+  console.log(`📱 Acceso móvil: http://[TU_IP_LOCAL]:${PORT}`);
+  console.log(`🔧 Para encontrar tu IP local, ejecuta: ipconfig (Windows) o ifconfig (Mac/Linux)`);
   console.log(`📊 Conectado a Yahoo Finance para precios en tiempo real`);
   console.log(`💾 Base de datos SQLite inicializada`);
   

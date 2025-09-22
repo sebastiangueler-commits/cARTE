@@ -16,10 +16,44 @@ const PORT = process.env.PORT || 5000;
 // Inicializar Express
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// Middleware - CORS configurado para acceso mundial
+app.use(cors({
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // En producción, permitir cualquier origen
+    if (process.env.NODE_ENV === 'production') {
+      return callback(null, true);
+    }
+    
+    // Lista de orígenes permitidos para desarrollo
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:5000',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5000',
+      'https://admincarteras.netlify.app', // URL real de tu aplicación
+      process.env.CLIENT_URL
+    ].filter(Boolean);
+    
+    // Permitir cualquier IP local (para desarrollo móvil)
+    if (origin.match(/^http:\/\/192\.168\.\d+\.\d+:\d+$/) || 
+        origin.match(/^http:\/\/10\.\d+\.\d+\.\d+:\d+$/) ||
+        origin.match(/^http:\/\/172\.(1[6-9]|2\d|3[01])\.\d+\.\d+:\d+$/)) {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Middleware de autenticación
 const authenticateToken = (req, res, next) => {

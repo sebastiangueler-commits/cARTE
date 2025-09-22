@@ -5,6 +5,8 @@
 [build.environment]
   NODE_VERSION = "18"
   JWT_SECRET = "portfolio-manager-secret-key-2024-production"
+  NODE_ENV = "production"
+  CLIENT_URL = "https://admincarteras.netlify.app"
 
 [[redirects]]
   from = "/api/*"
