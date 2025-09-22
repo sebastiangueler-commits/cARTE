@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Debug Error 400</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success { background: rgba(76, 175, 80, 0.3); }
+        .error { background: rgba(244, 67, 54, 0.3); }
+        .loading { background: rgba(255, 193, 7, 0.3); }
+        .info { background: rgba(33, 150, 243, 0.3); }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover { background: #45a049; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .debug-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Debug Error 400</h1>
+        <p>Esta página te ayuda a identificar qué está causando el error 400.</p>
+        
+        <div class="test-section">
+            <h2>🔗 Configuración de URL</h2>
+            <input type="text" id="apiUrl" placeholder="https://admincarteras.netlify.app" value="https://admincarteras.netlify.app">
+        </div>
+
+        <div class="test-section">
+            <h2>🔐 Test de Login</h2>
+            <input type="text" id="username" placeholder="Usuario" value="admin">
+            <input type="password" id="password" placeholder="Contraseña" value="admin123">
+            <button onclick="testLogin()">🔐 Probar Login</button>
+            <button onclick="testLoginWithBadData()">❌ Probar con Datos Malos</button>
+            
+            <div id="loginResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📁 Test de Crear Portfolio</h2>
+            <input type="text" id="portfolioName" placeholder="Nombre del portfolio" value="Mi Portfolio">
+            <textarea id="portfolioDesc" placeholder="Descripción (opcional)">Portfolio de prueba</textarea>
+            <button onclick="testCreatePortfolio()">📁 Crear Portfolio</button>
+            <button onclick="testCreatePortfolioWithBadData()">❌ Probar con Datos Malos</button>
+            
+            <div id="portfolioResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Test de Detección de Activos</h2>
+            <textarea id="testText" placeholder="Texto para probar detección">AAPL 10
+GOOGL 5
+MSFT 8</textarea>
+            <button onclick="testAssetDetection()">🔍 Probar Detección</button>
+            
+            <div id="detectionResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Información de Debug</h2>
+            <div id="debugInfo" class="debug-info">Esperando tests...</div>
+        </div>
+    </div>
+
+    <script>
+        let apiUrl = 'https://admincarteras.netlify.app';
+        let authToken = null;
+        
+        function updateUrl() {
+            apiUrl = document.getElementById('apiUrl').value.replace(/\/$/, '');
+        }
+        
+        document.getElementById('apiUrl').addEventListener('input', updateUrl);
+        
+        function addResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function updateDebugInfo(info) {
+            document.getElementById('debugInfo').textContent = info;
+        }
+        
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            addResult('loginResults', '🔐 Probando login...', 'loading');
+            
+            try {
+                const requestData = { username, password };
+                updateDebugInfo(`Login Request:\nURL: ${apiUrl}/.netlify/functions/api/api/auth/login\nMethod: POST\nBody: ${JSON.stringify(requestData, null, 2)}`);
+                
+                const response = await fetch(`${apiUrl}/.netlify/functions/api/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const responseText = await response.text();
+                updateDebugInfo(`Login Response:\nStatus: ${response.status}\nHeaders: ${JSON.stringify([...response.headers.entries()], null, 2)}\nBody: ${responseText}`);
+                
+                if (response.ok) {
+                    const data = JSON.parse(responseText);
+                    authToken = data.token;
+                    addResult('loginResults', '✅ Login exitoso', 'success');
+                } else {
+                    addResult('loginResults', `❌ Error ${response.status}: ${responseText}`, 'error');
+                }
+            } catch (error) {
+                addResult('loginResults', `❌ Error de conexión: ${error.message}`, 'error');
+                updateDebugInfo(`Error: ${error.message}`);
+            }
+        }
+        
+        async function testLoginWithBadData() {
+            addResult('loginResults', '❌ Probando con datos malos...', 'loading');
+            
+            try {
+                const badData = { username: '', password: null };
+                updateDebugInfo(`Bad Login Request:\nURL: ${apiUrl}/.netlify/functions/api/api/auth/login\nMethod: POST\nBody: ${JSON.stringify(badData, null, 2)}`);
+                
+                const response = await fetch(`${apiUrl}/.netlify/functions/api/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(badData)
+                });
+                
+                const responseText = await response.text();
+                updateDebugInfo(`Bad Login Response:\nStatus: ${response.status}\nBody: ${responseText}`);
+                
+                addResult('loginResults', `📊 Respuesta esperada (400): ${response.status} - ${responseText}`, response.status === 400 ? 'success' : 'error');
+            } catch (error) {
+                addResult('loginResults', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testCreatePortfolio() {
+            if (!authToken) {
+                addResult('portfolioResults', '❌ Primero haz login', 'error');
+                return;
+            }
+            
+            const name = document.getElementById('portfolioName').value;
+            const description = document.getElementById('portfolioDesc').value;
+            
+            addResult('portfolioResults', '📁 Creando portfolio...', 'loading');
+            
+            try {
+                const requestData = { name, description };
+                updateDebugInfo(`Portfolio Request:\nURL: ${apiUrl}/.netlify/functions/api/api/portfolios\nMethod: POST\nBody: ${JSON.stringify(requestData, null, 2)}\nToken: ${authToken ? 'Presente' : 'Faltante'}`);
+                
+                const response = await fetch(`${apiUrl}/.netlify/functions/api/api/portfolios`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const responseText = await response.text();
+                updateDebugInfo(`Portfolio Response:\nStatus: ${response.status}\nBody: ${responseText}`);
+                
+                if (response.ok) {
+                    addResult('portfolioResults', '✅ Portfolio creado exitosamente', 'success');
+                } else {
+                    addResult('portfolioResults', `❌ Error ${response.status}: ${responseText}`, 'error');
+                }
+            } catch (error) {
+                addResult('portfolioResults', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testCreatePortfolioWithBadData() {
+            if (!authToken) {
+                addResult('portfolioResults', '❌ Primero haz login', 'error');
+                return;
+            }
+            
+            addResult('portfolioResults', '❌ Probando con datos malos...', 'loading');
+            
+            try {
+                const badData = { name: '', description: 123 };
+                updateDebugInfo(`Bad Portfolio Request:\nURL: ${apiUrl}/.netlify/functions/api/api/portfolios\nMethod: POST\nBody: ${JSON.stringify(badData, null, 2)}`);
+                
+                const response = await fetch(`${apiUrl}/.netlify/functions/api/api/portfolios`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(badData)
+                });
+                
+                const responseText = await response.text();
+                updateDebugInfo(`Bad Portfolio Response:\nStatus: ${response.status}\nBody: ${responseText}`);
+                
+                addResult('portfolioResults', `📊 Respuesta esperada (400): ${response.status} - ${responseText}`, response.status === 400 ? 'success' : 'error');
+            } catch (error) {
+                addResult('portfolioResults', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAssetDetection() {
+            if (!authToken) {
+                addResult('detectionResults', '❌ Primero haz login', 'error');
+                return;
+            }
+            
+            const text = document.getElementById('testText').value.trim();
+            
+            if (!text) {
+                addResult('detectionResults', '❌ Ingresa texto para probar', 'error');
+                return;
+            }
+            
+            addResult('detectionResults', '🔍 Probando detección...', 'loading');
+            
+            try {
+                // Crear portfolio temporal
+                const portfolioResponse = await fetch(`${apiUrl}/.netlify/functions/api/api/portfolios`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        name: 'Test Detection',
+                        description: 'Portfolio temporal'
+                    })
+                });
+                
+                if (!portfolioResponse.ok) {
+                    addResult('detectionResults', '❌ Error creando portfolio temporal', 'error');
+                    return;
+                }
+                
+                const portfolioData = await portfolioResponse.json();
+                const portfolioId = portfolioData.id;
+                
+                // Probar detección
+                const requestData = { portfolio_id: portfolioId, textData: text };
+                updateDebugInfo(`Detection Request:\nURL: ${apiUrl}/.netlify/functions/api/api/upload\nMethod: POST\nBody: ${JSON.stringify(requestData, null, 2)}`);
+                
+                const detectionResponse = await fetch(`${apiUrl}/.netlify/functions/api/api/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const responseText = await detectionResponse.text();
+                updateDebugInfo(`Detection Response:\nStatus: ${detectionResponse.status}\nBody: ${responseText}`);
+                
+                if (detectionResponse.ok) {
+                    const data = JSON.parse(responseText);
+                    addResult('detectionResults', `✅ Detección exitosa - ${data.assets.length} activos`, 'success');
+                } else {
+                    addResult('detectionResults', `❌ Error ${detectionResponse.status}: ${responseText}`, 'error');
+                }
+            } catch (error) {
+                addResult('detectionResults', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-update URL
+        window.addEventListener('load', () => {
+            updateUrl();
+            addResult('loginResults', '🔧 Página de debug cargada', 'info');
+        });
+    </script>
+</body>
+</html>

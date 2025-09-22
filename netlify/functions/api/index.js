@@ -23,10 +23,13 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
-// Middleware
-app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Middleware para logging de requests
+app.use((req, res, next) => {
+  console.log(`📥 ${req.method} ${req.path}`);
+  console.log('📋 Headers:', req.headers);
+  console.log('📦 Body:', req.body);
+  next();
+});
 
 // Middleware para manejar OPTIONS requests (preflight) - Acceso Global
 app.options('*', (req, res) => {
@@ -130,7 +133,28 @@ app.get('/api/health', (req, res) => {
 // Rutas de autenticación
 app.post('/api/auth/login', async (req, res) => {
   try {
+    console.log('🔐 Iniciando proceso de login...');
+    console.log('📦 Request body:', req.body);
+    console.log('📋 Request headers:', req.headers);
+    
     const { username, password } = req.body;
+    
+    // Validación mejorada
+    if (!username || !password) {
+      console.log('❌ Datos faltantes:', { username: !!username, password: !!password });
+      return res.status(400).json({ 
+        error: 'Usuario y contraseña son requeridos',
+        details: { username: !!username, password: !!password }
+      });
+    }
+    
+    if (typeof username !== 'string' || typeof password !== 'string') {
+      console.log('❌ Tipos incorrectos:', { username: typeof username, password: typeof password });
+      return res.status(400).json({ 
+        error: 'Usuario y contraseña deben ser texto',
+        details: { username: typeof username, password: typeof password }
+      });
+    }
     
     console.log('🔐 Intentando login:', { username, password: password ? '***' : 'undefined' });
     
@@ -256,31 +280,57 @@ app.get('/api/portfolios', authenticateToken, (req, res) => {
 // Ruta para crear nueva cartera
 app.post('/api/portfolios', authenticateToken, (req, res) => {
   try {
+    console.log('📁 Creando nueva cartera...');
+    console.log('📦 Request body:', req.body);
+    console.log('👤 Usuario:', req.user);
+    
     const { name, description } = req.body;
     
+    // Validación mejorada
     if (!name) {
-      return res.status(400).json({ error: 'El nombre de la cartera es requerido' });
+      console.log('❌ Nombre faltante');
+      return res.status(400).json({ 
+        error: 'El nombre de la cartera es requerido',
+        details: { name: !!name, description: !!description }
+      });
+    }
+    
+    if (typeof name !== 'string') {
+      console.log('❌ Tipo incorrecto para nombre:', typeof name);
+      return res.status(400).json({ 
+        error: 'El nombre debe ser texto',
+        details: { name: typeof name, description: typeof description }
+      });
+    }
+    
+    if (name.trim().length === 0) {
+      console.log('❌ Nombre vacío');
+      return res.status(400).json({ 
+        error: 'El nombre no puede estar vacío',
+        details: { name: name.trim().length }
+      });
     }
 
     const newPortfolio = {
       id: portfolios.length + 1,
-      name,
-      description: description || '',
+      name: name.trim(),
+      description: (description || '').trim(),
       user_id: req.user.userId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
     
     portfolios.push(newPortfolio);
+    console.log('✅ Cartera creada:', newPortfolio);
 
     res.json({ 
       id: newPortfolio.id,
-      name,
-      description: description || '',
+      name: newPortfolio.name,
+      description: newPortfolio.description,
       message: 'Cartera creada exitosamente' 
     });
   } catch (error) {
-    console.error('Error creando cartera:', error);
+    console.error('❌ Error creando cartera:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
