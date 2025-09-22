@@ -1,59 +1,26 @@
 const express = require('express');
 const cors = require('cors');
-const multer = require('multer');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const fs = require('fs');
-const path = require('path');
-const { createWorker } = require('tesseract.js');
 const axios = require('axios');
 
 // Configuración
 const JWT_SECRET = process.env.JWT_SECRET || 'portfolio-manager-secret-key-2024';
-const PORT = process.env.PORT || 5000;
 
 // Inicializar Express
 const app = express();
 
 // Middleware - CORS configurado para acceso mundial
 app.use(cors({
-  origin: function (origin, callback) {
-    // Permitir requests sin origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
-    
-    // En producción, permitir cualquier origen
-    if (process.env.NODE_ENV === 'production') {
-      return callback(null, true);
-    }
-    
-    // Lista de orígenes permitidos para desarrollo
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:5000',
-      'http://127.0.0.1:3000',
-      'http://127.0.0.1:5000',
-      'https://admincarteras.netlify.app', // URL real de tu aplicación
-      process.env.CLIENT_URL
-    ].filter(Boolean);
-    
-    // Permitir cualquier IP local (para desarrollo móvil)
-    if (origin.match(/^http:\/\/192\.168\.\d+\.\d+:\d+$/) || 
-        origin.match(/^http:\/\/10\.\d+\.\d+\.\d+:\d+$/) ||
-        origin.match(/^http:\/\/172\.(1[6-9]|2\d|3[01])\.\d+\.\d+:\d+$/)) {
-      return callback(null, true);
-    }
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('No permitido por CORS'));
-    }
-  },
+  origin: true, // Permitir cualquier origen en producción
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Middleware de autenticación
 const authenticateToken = (req, res, next) => {
@@ -242,88 +209,6 @@ async function getYahooPrice(symbol) {
   return null;
 }
 
-// Función para extraer activos de imagen OCR
-async function extractAssetsFromImage(imagePath) {
-  try {
-    console.log('🔍 Procesando imagen con OCR real:', imagePath);
-    
-    const worker = await createWorker('eng');
-    
-    const { data: { text } } = await worker.recognize(imagePath);
-    await worker.terminate();
-    
-    console.log('📄 Texto extraído de la imagen:');
-    console.log('──────────────────────────────────────────────────');
-    console.log(text);
-    console.log('──────────────────────────────────────────────────');
-    
-    return parseAssetsFromText(text);
-  } catch (error) {
-    console.error('Error en OCR:', error);
-    return [];
-  }
-}
-
-// Función para parsear activos del texto OCR
-function parseAssetsFromText(text) {
-  const lines = text.split('\n');
-  const assets = [];
-  const seenSymbols = new Set();
-  
-  console.log('🔍 Analizando líneas del texto extraído...');
-  
-  for (const line of lines) {
-    console.log('📝 Analizando línea:', `"${line}"`);
-    
-    // Patrones para detectar activos en diferentes formatos de broker
-    const patterns = [
-      // Patrón 1: SYMBOL Exchange Price Change Quantity PnL
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 2: SYMBOL Exchange Price Change Quantity
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)$/,
-      // Patrón 3: SYMBOL Exchange Price Quantity
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+(\d+)$/,
-      // Patrón 4: SYMBOL Price Change Quantity
-      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)$/,
-      // Patrón 5: SYMBOL Exchange Price (cantidad implícita = 1)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+al\s+[+-]?\d+\.?\d*$/,
-      // Patrón 6: SYMBOL Price (cantidad implícita = 1)
-      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 7: SYMBOL Exchange Price Change Quantity (formato más específico)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 8: SYMBOL Exchange Price Quantity (formato específico)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+(\d+)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 9: SYMBOL Exchange Price (cantidad implícita = 1, formato específico)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+al\s+[+-]?\d+\.?\d*$/
-    ];
-    
-    for (let i = 0; i < patterns.length; i++) {
-      const match = line.match(patterns[i]);
-      if (match) {
-        const symbol = match[1];
-        const price = parseFloat(match[2]);
-        const quantity = match[3] ? parseInt(match[3]) : 1;
-        
-        if (!seenSymbols.has(symbol) && price > 0 && quantity > 0) {
-          console.log(`🎯 Patrón ${i + 1} broker detectado: ${symbol} precio=${price} cantidad=${quantity}`);
-          assets.push({
-            symbol,
-            name: `${symbol} Inc.`,
-            quantity,
-            purchase_price: price
-          });
-          seenSymbols.add(symbol);
-          console.log(`✅ Activo agregado: ${symbol} ${quantity} @ $${price}`);
-        }
-        break;
-      }
-    }
-  }
-  
-  console.log(`📊 Total activos detectados: ${assets.length}`);
-  return assets;
-}
-
 // Rutas de autenticación
 app.post('/api/auth/login', async (req, res) => {
   try {
@@ -463,7 +348,6 @@ app.post('/api/portfolios', authenticateToken, async (req, res) => {
     
     console.log('🚀 INICIO: Creando portfolio - req.user:', req.user);
     console.log('🔍 Creando portfolio:', { name, description, userId: req.user.userId });
-    console.log('🔍 req.user completo:', req.user);
     
     if (!name) {
       return res.status(400).json({ error: 'El nombre de la cartera es requerido' });
@@ -477,7 +361,6 @@ app.post('/api/portfolios', authenticateToken, async (req, res) => {
     const portfolioId = await new Promise((resolve, reject) => {
       const values = [name, description || '', req.user.userId];
       console.log('🔍 Valores para INSERT:', values);
-      console.log('🔍 Tipo de userId:', typeof req.user.userId);
       
       db.run('INSERT INTO portfolios (name, description, user_id) VALUES (?, ?, ?)', 
         values, function(err) {
@@ -591,7 +474,7 @@ app.get('/api/dashboard/stats', authenticateToken, async (req, res) => {
   }
 });
 
-// Ruta para subir imagen OCR
+// Ruta para subir imagen OCR (simplificada para Netlify)
 app.post('/api/upload', authenticateToken, async (req, res) => {
   try {
     const { portfolio_id } = req.body;
@@ -666,6 +549,7 @@ exports.handler = async (event, context) => {
   return new Promise((resolve) => {
     app(event, context, (err, result) => {
       if (err) {
+        console.error('Error en handler:', err);
         resolve({
           statusCode: 500,
           body: JSON.stringify({ error: 'Error interno del servidor' })
