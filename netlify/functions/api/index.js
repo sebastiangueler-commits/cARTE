@@ -3,6 +3,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { createWorker } = require('tesseract.js');
+const serverless = require('serverless-http');
 
 // Configuración
 const JWT_SECRET = process.env.JWT_SECRET || 'portfolio-manager-secret-key-2024';
@@ -10,13 +11,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'portfolio-manager-secret-key-2024'
 // Inicializar Express
 const app = express();
 
-// Configuración CORS optimizada para móviles
+// Configuración CORS optimizada para acceso global
 const corsOptions = {
-  origin: '*',
+  origin: function (origin, callback) {
+    // Permitir cualquier origen para acceso global
+    callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   credentials: false,
-  maxAge: 86400
+  maxAge: 86400,
+  optionsSuccessStatus: 200
 };
 
 // Middleware
@@ -24,8 +29,14 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Middleware para manejar OPTIONS requests (preflight)
-app.options('*', cors(corsOptions));
+// Middleware para manejar OPTIONS requests (preflight) - Acceso Global
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.header('Access-Control-Max-Age', '86400');
+  res.status(200).end();
+});
 
 // Base de datos en memoria (simplificada para Netlify)
 let users = [
@@ -34,9 +45,31 @@ let users = [
     username: 'admin',
     email: 'admin@portfolio.com',
     password_hash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // admin123
-    full_name: 'Administrador'
+    full_name: 'Administrador',
+    created_at: new Date().toISOString(),
+    last_login: null
   }
 ];
+
+// Función para inicializar usuario admin si no existe
+function ensureAdminUser() {
+  const adminExists = users.find(u => u.username === 'admin');
+  if (!adminExists) {
+    users.push({
+      id: 1,
+      username: 'admin',
+      email: 'admin@portfolio.com',
+      password_hash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+      full_name: 'Administrador',
+      created_at: new Date().toISOString(),
+      last_login: null
+    });
+    console.log('✅ Usuario admin inicializado');
+  }
+}
+
+// Inicializar usuario admin al cargar
+ensureAdminUser();
 
 let portfolios = [];
 let assets = [];
@@ -237,6 +270,17 @@ function parseAssetsFromText(text) {
   console.log(`📊 Total activos detectados: ${assets.length}`);
   return assets;
 }
+
+// Ruta de salud para verificar que la API funciona
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    message: 'Portfolio Manager API funcionando correctamente',
+    timestamp: new Date().toISOString(),
+    version: '2.0.0',
+    globalAccess: true
+  });
+});
 
 // Rutas de autenticación
 app.post('/api/auth/login', async (req, res) => {
@@ -527,17 +571,4 @@ app.post('/api/upload', authenticateToken, async (req, res) => {
 });
 
 // Función principal de Netlify
-exports.handler = async (event, context) => {
-  return new Promise((resolve) => {
-    app(event, context, (err, result) => {
-      if (err) {
-        resolve({
-          statusCode: 500,
-          body: JSON.stringify({ error: 'Error interno del servidor' })
-        });
-      } else {
-        resolve(result);
-      }
-    });
-  });
-};
+exports.handler = serverless(app);

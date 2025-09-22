@@ -31,6 +31,7 @@ En el dashboard de Netlify:
    NODE_ENV = production
    CLIENT_URL = https://admincarteras.netlify.app
    ```
+3. **IMPORTANTE:** Asegúrate de que las variables estén configuradas correctamente
 
 ### Paso 5: Actualizar URL en el código
 1. En `netlify.toml`, cambia:
@@ -94,10 +95,12 @@ Una vez desplegado, tu aplicación será accesible desde:
 - ✅ **Solucionado:** CORS configurado para acceso mundial
 - ✅ **Producción:** Permite cualquier origen
 
-### Error de conexión
-- ✅ **Verifica:** Que la URL sea correcta
-- ✅ **Prueba:** Desde diferentes dispositivos
-- ✅ **Revisa:** Variables de entorno en Netlify
+### Error de conexión desde otros lugares
+- ✅ **Verifica:** Que la URL sea correcta: `https://admincarteras.netlify.app`
+- ✅ **Prueba:** Desde diferentes dispositivos y ubicaciones
+- ✅ **Revisa:** Variables de entorno en Netlify Dashboard
+- ✅ **CORS:** Configurado para acceso global desde cualquier ubicación
+- ✅ **Headers:** Verifica que los headers CORS estén configurados correctamente
 
 ### Base de datos
 - ✅ **SQLite en memoria:** Funciona en Netlify Functions

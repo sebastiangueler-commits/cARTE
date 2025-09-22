@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Acceso Global - Portfolio Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success { background: rgba(76, 175, 80, 0.3); }
+        .error { background: rgba(244, 67, 54, 0.3); }
+        .loading { background: rgba(255, 193, 7, 0.3); }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover { background: #45a049; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        .url-input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 Test de Acceso Global - Portfolio Manager</h1>
+        <p>Esta página te permite probar si tu aplicación está funcionando correctamente desde cualquier ubicación.</p>
+        
+        <div class="test-section">
+            <h2>🔗 Configuración de URL</h2>
+            <input type="text" id="apiUrl" class="url-input" placeholder="https://admincarteras.netlify.app" value="https://admincarteras.netlify.app">
+            <p><small>Ingresa la URL de tu aplicación desplegada en Netlify</small></p>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Tests de Conectividad</h2>
+            <button onclick="testConnection()">🔍 Probar Conexión</button>
+            <button onclick="testLogin()">🔐 Probar Login</button>
+            <button onclick="testCORS()">🌐 Probar CORS</button>
+            <button onclick="runAllTests()">🚀 Ejecutar Todos los Tests</button>
+            
+            <div id="results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📱 Información de Acceso</h2>
+            <p><strong>Usuario:</strong> admin</p>
+            <p><strong>Contraseña:</strong> admin123</p>
+            <p><strong>URL de la aplicación:</strong> <span id="appUrl">https://admincarteras.netlify.app</span></p>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Resultados</h2>
+            <div id="testResults"></div>
+        </div>
+    </div>
+
+    <script>
+        let apiUrl = 'https://admincarteras.netlify.app';
+        
+        function updateUrl() {
+            apiUrl = document.getElementById('apiUrl').value.replace(/\/$/, '');
+            document.getElementById('appUrl').textContent = apiUrl;
+        }
+        
+        document.getElementById('apiUrl').addEventListener('input', updateUrl);
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('testResults');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        async function testConnection() {
+            addResult('🔍 Probando conexión básica...', 'loading');
+            try {
+                // Probar endpoint de salud primero
+                const healthResponse = await fetch(`${apiUrl}/.netlify/functions/api/api/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (healthResponse.ok) {
+                    const healthData = await healthResponse.json();
+                    addResult(`✅ API funcionando - ${healthData.message}`, 'success');
+                } else {
+                    // Si no hay endpoint de salud, probar auth
+                    const authResponse = await fetch(`${apiUrl}/.netlify/functions/api/api/auth/verify`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (authResponse.status === 401) {
+                        addResult('✅ Conexión exitosa - API respondiendo correctamente', 'success');
+                    } else {
+                        addResult(`⚠️ Conexión parcial - Status: ${authResponse.status}`, 'loading');
+                    }
+                }
+            } catch (error) {
+                addResult(`❌ Error de conexión: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testCORS() {
+            addResult('🌐 Probando CORS...', 'loading');
+            try {
+                const response = await fetch(`${apiUrl}/.netlify/functions/api/api/auth/login`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+                
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers')
+                };
+                
+                if (corsHeaders['Access-Control-Allow-Origin']) {
+                    addResult('✅ CORS configurado correctamente', 'success');
+                } else {
+                    addResult('❌ CORS no configurado correctamente', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Error probando CORS: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testLogin() {
+            addResult('🔐 Probando login...', 'loading');
+            try {
+                const response = await fetch(`${apiUrl}/.netlify/functions/api/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.token) {
+                        addResult('✅ Login exitoso - Token recibido', 'success');
+                    } else {
+                        addResult('⚠️ Login parcial - Sin token', 'loading');
+                    }
+                } else {
+                    addResult(`❌ Error en login - Status: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Error en login: ${error.message}`, 'error');
+            }
+        }
+        
+        async function runAllTests() {
+            addResult('🚀 Ejecutando todos los tests...', 'loading');
+            await testConnection();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testCORS();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testLogin();
+            addResult('✅ Todos los tests completados', 'success');
+        }
+        
+        // Auto-test al cargar la página
+        window.addEventListener('load', () => {
+            addResult('🌍 Página de test cargada - Lista para probar acceso global', 'success');
+        });
+    </script>
+</body>
+</html>
