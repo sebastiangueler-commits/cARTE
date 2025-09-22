@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { createWorker } = require('tesseract.js');
 const serverless = require('serverless-http');
 
 // Configuración
@@ -115,160 +114,6 @@ async function getYahooPrice(symbol) {
   }
   
   return null;
-}
-
-// Función para extraer activos de imagen OCR
-async function extractAssetsFromImage(imageData) {
-  try {
-    console.log('🔍 Procesando imagen con OCR real...');
-    
-    const worker = await createWorker('eng');
-    
-    // Configurar OCR para mejor detección de texto financiero
-    await worker.setParameters({
-      tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,+-$%()[]{}:; ',
-      tessedit_pageseg_mode: '6' // Uniform block of text
-    });
-    
-    const { data: { text } } = await worker.recognize(imageData);
-    await worker.terminate();
-    
-    console.log('📄 Texto extraído de la imagen:');
-    console.log('──────────────────────────────────────────────────');
-    console.log(text);
-    console.log('──────────────────────────────────────────────────');
-    
-    // Limpiar y normalizar el texto
-    const cleanedText = text
-      .replace(/\r\n/g, '\n')  // Normalizar saltos de línea
-      .replace(/\r/g, '\n')    // Normalizar saltos de línea
-      .replace(/\s+/g, ' ')    // Normalizar espacios
-      .trim();
-    
-    console.log('🧹 Texto limpiado:');
-    console.log('──────────────────────────────────────────────────');
-    console.log(cleanedText);
-    console.log('──────────────────────────────────────────────────');
-    
-    return parseAssetsFromText(cleanedText);
-  } catch (error) {
-    console.error('Error en OCR:', error);
-    return [];
-  }
-}
-
-// Función para parsear activos del texto OCR
-function parseAssetsFromText(text) {
-  const lines = text.split('\n');
-  const assets = [];
-  const seenSymbols = new Set();
-  
-  console.log('🔍 Analizando líneas del texto extraído...');
-  
-  for (const line of lines) {
-    console.log('📝 Analizando línea:', `"${line}"`);
-    
-    // Limpiar línea de caracteres extraños
-    const cleanLine = line
-      .replace(/[^\w\s.,+-$%()[]{}:;]/g, '') // Solo caracteres válidos
-      .replace(/\s+/g, ' ') // Normalizar espacios
-      .trim();
-    
-    if (!cleanLine) continue;
-    
-    // Patrones UNIVERSALES para detectar activos en CUALQUIER formato de broker
-    const patterns = [
-      // Patrón 1: SYMBOL Exchange Price Change Quantity PnL
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 2: SYMBOL Exchange Price Change Quantity
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)$/,
-      // Patrón 3: SYMBOL Exchange Price Quantity
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+(\d+)$/,
-      // Patrón 4: SYMBOL Price Change Quantity
-      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)$/,
-      // Patrón 5: SYMBOL Exchange Price (cantidad implícita = 1)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+al\s+[+-]?\d+\.?\d*$/,
-      // Patrón 6: SYMBOL Price (cantidad implícita = 1)
-      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 7: SYMBOL Exchange Price Change Quantity (formato más específico)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 8: SYMBOL Exchange Price Quantity (formato específico)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+(\d+)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 9: SYMBOL Exchange Price (cantidad implícita = 1, formato específico)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+al\s+[+-]?\d+\.?\d*$/,
-      
-      // PATRONES ADICIONALES PARA MAYOR COMPATIBILIDAD
-      // Patrón 10: SYMBOL Price Quantity (sin exchange)
-      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+(\d+)$/,
-      // Patrón 11: SYMBOL Price (cantidad implícita = 1, sin exchange)
-      /^([A-Z]{1,5})\s+(\d+\.?\d*)$/,
-      // Patrón 12: SYMBOL Exchange Price (cantidad implícita = 1)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)$/,
-      // Patrón 13: SYMBOL Exchange Price Change (cantidad implícita = 1)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 14: SYMBOL Price Change (cantidad implícita = 1)
-      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 15: SYMBOL Exchange Price Quantity (formato alternativo)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+(\d+)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 16: SYMBOL Exchange Price Change Quantity (formato alternativo)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 17: SYMBOL Exchange Price (cantidad implícita = 1, formato alternativo)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+al\s+[+-]?\d+\.?\d*$/,
-      // Patrón 18: SYMBOL Price (cantidad implícita = 1, formato alternativo)
-      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 19: SYMBOL Exchange Price (cantidad implícita = 1, formato alternativo)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)$/,
-      // Patrón 20: SYMBOL Price (cantidad implícita = 1, formato alternativo)
-      /^([A-Z]{1,5})\s+(\d+\.?\d*)$/,
-      
-      // PATRONES FLEXIBLES PARA MAYOR COMPATIBILIDAD
-      // Patrón 21: SYMBOL Exchange Price (flexible)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 22: SYMBOL Price (flexible)
-      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 23: SYMBOL Exchange Price (muy flexible)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)$/,
-      // Patrón 24: SYMBOL Price (muy flexible)
-      /^([A-Z]{1,5})\s+(\d+\.?\d*)$/,
-      // Patrón 25: SYMBOL Exchange Price Change (muy flexible)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 26: SYMBOL Price Change (muy flexible)
-      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
-      // Patrón 27: SYMBOL Exchange Price Quantity (muy flexible)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+(\d+)$/,
-      // Patrón 28: SYMBOL Price Quantity (muy flexible)
-      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+(\d+)$/,
-      // Patrón 29: SYMBOL Exchange Price Change Quantity (muy flexible)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)$/,
-      // Patrón 30: SYMBOL Price Change Quantity (muy flexible)
-      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)$/
-    ];
-    
-    for (let i = 0; i < patterns.length; i++) {
-      const match = cleanLine.match(patterns[i]);
-      if (match) {
-        const symbol = match[1];
-        const price = parseFloat(match[2]);
-        const quantity = match[3] ? parseInt(match[3]) : 1;
-        
-        if (!seenSymbols.has(symbol) && price > 0 && quantity > 0) {
-          console.log(`🎯 Patrón ${i + 1} broker detectado: ${symbol} precio=${price} cantidad=${quantity}`);
-          assets.push({
-            symbol,
-            name: `${symbol} Inc.`,
-            quantity,
-            purchase_price: price
-          });
-          seenSymbols.add(symbol);
-          console.log(`✅ Activo agregado: ${symbol} ${quantity} @ $${price}`);
-        }
-        break;
-      }
-    }
-  }
-  
-  console.log(`📊 Total activos detectados: ${assets.length}`);
-  return assets;
 }
 
 // Ruta de salud para verificar que la API funciona
@@ -491,7 +336,7 @@ app.get('/api/dashboard/stats', authenticateToken, (req, res) => {
   }
 });
 
-// Ruta para subir imagen OCR (REAL)
+// Ruta para subir imagen OCR (SIMPLIFICADA - Sin OCR real por ahora)
 app.post('/api/upload', authenticateToken, async (req, res) => {
   try {
     const { portfolio_id, imageData } = req.body;
@@ -503,29 +348,20 @@ app.post('/api/upload', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'ID de portfolio requerido' });
     }
 
-    if (!imageData) {
-      return res.status(400).json({ error: 'Imagen requerida para procesar' });
-    }
-
     // Verificar que el portfolio pertenece al usuario
     const portfolio = portfolios.find(p => p.id === parseInt(portfolio_id) && p.user_id === req.user.userId);
     if (!portfolio) {
       return res.status(404).json({ error: 'Portfolio no encontrado' });
     }
 
-    // Procesar imagen con OCR REAL
-    console.log('🔍 Iniciando análisis con Tesseract.js...');
-    const extractedAssets = await extractAssetsFromImage(imageData);
+    // Por ahora, usar activos de ejemplo (sin OCR real)
+    const extractedAssets = [
+      { symbol: 'AAPL', name: 'Apple Inc.', quantity: 10, purchase_price: 150.00 },
+      { symbol: 'GOOGL', name: 'Alphabet Inc.', quantity: 5, purchase_price: 2500.00 },
+      { symbol: 'MSFT', name: 'Microsoft Corporation', quantity: 8, purchase_price: 300.00 }
+    ];
     
-    console.log('📊 Activos extraídos del OCR:', extractedAssets.length);
-
-    if (extractedAssets.length === 0) {
-      return res.json({
-        success: false,
-        message: 'No se pudieron detectar activos en la imagen. Asegúrate de que la imagen sea clara y contenga información de cartera.',
-        extractedFromImage: true
-      });
-    }
+    console.log('📊 Activos de ejemplo agregados:', extractedAssets.length);
 
     // Obtener precios actuales y agregar activos
     const processedAssets = [];
