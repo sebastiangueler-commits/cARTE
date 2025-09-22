@@ -10,10 +10,22 @@ const JWT_SECRET = process.env.JWT_SECRET || 'portfolio-manager-secret-key-2024'
 // Inicializar Express
 const app = express();
 
+// Configuración CORS optimizada para móviles
+const corsOptions = {
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: false,
+  maxAge: 86400
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Middleware para manejar OPTIONS requests (preflight)
+app.options('*', cors(corsOptions));
 
 // Base de datos en memoria (simplificada para Netlify)
 let users = [
