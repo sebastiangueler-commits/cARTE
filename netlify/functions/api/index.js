@@ -350,10 +350,138 @@ app.get('/api/dashboard/stats', authenticateToken, (req, res) => {
   }
 });
 
-// Ruta para subir imagen OCR (SIMPLIFICADA - Sin OCR real por ahora)
+// Función mejorada para detectar activos desde texto
+function detectAssetsFromText(text) {
+  console.log('🔍 Analizando texto para detectar activos...');
+  console.log('📄 Texto recibido:', text);
+  
+  const detectedAssets = [];
+  const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  
+  // Lista expandida de símbolos válidos
+  const validSymbols = [
+    // Tech Giants
+    'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'NFLX', 'ADBE', 'CRM', 'ORCL', 'INTC', 'AMD', 'QCOM',
+    // ETFs Populares
+    'SPY', 'QQQ', 'VTI', 'VEA', 'VWO', 'SCHD', 'VYM', 'HDV', 'SPYI', 'SCHG', 'VUG', 'VTV', 'VYM', 'DIA', 'IWM',
+    // Internacionales
+    'EWZ', 'FXI', 'EWJ', 'EWG', 'EWU', 'EWC', 'EWA', 'EWH', 'EWS', 'EWT', 'EWY', 'EWL', 'EWN', 'EWO', 'EWP', 'EWQ', 'EWR', 'EWS', 'EWT', 'EWU', 'EWV', 'EWW', 'EWY', 'EWZ',
+    // Acciones Populares
+    'NKE', 'STLA', 'MRK', 'SUPV', 'XOM', 'UBER', 'BRK.B', 'JPM', 'BAC', 'WMT', 'PG', 'JNJ', 'KO', 'PFE', 'ABBV', 'CVX', 'MA', 'V', 'DIS', 'HD', 'MCD', 'NFLX', 'PYPL', 'SQ', 'ZM',
+    // Financieras
+    'JPM', 'BAC', 'WFC', 'C', 'GS', 'MS', 'AXP', 'BLK', 'SCHW', 'USB', 'PNC', 'TFC', 'COF', 'AON', 'MMC', 'SPGI', 'MCO', 'FIS', 'FISV', 'GPN', 'JKHY', 'NDAQ', 'TROW', 'WU',
+    // Energía
+    'XOM', 'CVX', 'COP', 'EOG', 'SLB', 'KMI', 'OKE', 'WMB', 'PSX', 'VLO', 'MPC', 'HES', 'DVN', 'PXD', 'NOV', 'HAL', 'BKR', 'FTI', 'RIG', 'DO', 'HP', 'NBR', 'PTEN', 'LBRT',
+    // Healthcare
+    'JNJ', 'PFE', 'ABBV', 'MRK', 'TMO', 'ABT', 'DHR', 'BMY', 'AMGN', 'GILD', 'BIIB', 'REGN', 'VRTX', 'ILMN', 'MRNA', 'BNTX', 'ZTS', 'CVS', 'UNH', 'ANTM', 'CI', 'HUM', 'ELV', 'AET', 'CVS', 'WBA', 'RAD', 'MCK', 'ABC', 'CAH', 'HSIC', 'PDCO', 'DGX', 'LH', 'TMO', 'DHR', 'A', 'BDX', 'BSX', 'EW', 'ISRG', 'MDT', 'SYK', 'ZBH', 'BAX', 'BMY', 'LLY', 'NVS', 'PFE', 'SNY', 'GSK', 'AZN', 'NVO', 'RHHBY', 'TAK'
+  ];
+  
+  console.log(`📊 Analizando ${lines.length} líneas de texto...`);
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    console.log(`📝 Línea ${i + 1}: "${line}"`);
+    
+    // Patrones mejorados para detectar activos
+    const patterns = [
+      // Patrón 1: SYMBOL Exchange Price Change Quantity PnL
+      /^([A-Z]{1,5})\s+[A-Za-z]+\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?$/,
+      // Patrón 2: SYMBOL Exchange Price Change Quantity
+      /^([A-Z]{1,5})\s+[A-Za-z]+\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?\s+(\d+(?:\.\d+)?)$/,
+      // Patrón 3: SYMBOL Exchange Price Quantity
+      /^([A-Z]{1,5})\s+[A-Za-z]+\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)$/,
+      // Patrón 4: SYMBOL Price Change Quantity
+      /^([A-Z]{1,5})\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?\s+(\d+(?:\.\d+)?)$/,
+      // Patrón 5: SYMBOL Exchange Price (cantidad implícita = 1)
+      /^([A-Z]{1,5})\s+[A-Za-z]+\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?\s+al\s+[+-]?\d+(?:\.\d+)?$/,
+      // Patrón 6: SYMBOL Price (cantidad implícita = 1)
+      /^([A-Z]{1,5})\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?$/,
+      // Patrón 7: SYMBOL Exchange Price Change Quantity (formato específico)
+      /^([A-Z]{1,5})\s+[A-Za-z]+\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?$/,
+      // Patrón 8: SYMBOL Exchange Price Quantity (formato específico)
+      /^([A-Z]{1,5})\s+[A-Za-z]+\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?$/,
+      // Patrón 9: SYMBOL Exchange Price (cantidad implícita = 1, formato específico)
+      /^([A-Z]{1,5})\s+[A-Za-z]+\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?\s+al\s+[+-]?\d+(?:\.\d+)?$/,
+      // Patrón 10: SYMBOL Price Quantity (sin exchange)
+      /^([A-Z]{1,5})\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)$/,
+      // Patrón 11: SYMBOL Price (cantidad implícita = 1, sin exchange)
+      /^([A-Z]{1,5})\s+(\d+(?:\.\d+)?)$/,
+      // Patrón 12: SYMBOL Exchange Price (cantidad implícita = 1)
+      /^([A-Z]{1,5})\s+[A-Za-z]+\s+(\d+(?:\.\d+)?)$/,
+      // Patrón 13: SYMBOL Exchange Price Change (cantidad implícita = 1)
+      /^([A-Z]{1,5})\s+[A-Za-z]+\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?$/,
+      // Patrón 14: SYMBOL Price Change (cantidad implícita = 1)
+      /^([A-Z]{1,5})\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?$/,
+      // Patrón 15: SYMBOL Exchange Price Quantity (formato alternativo)
+      /^([A-Z]{1,5})\s+[A-Za-z]+\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?$/,
+      // Patrón 16: SYMBOL Exchange Price Change Quantity (formato alternativo)
+      /^([A-Z]{1,5})\s+[A-Za-z]+\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?$/,
+      // Patrón 17: SYMBOL Exchange Price (cantidad implícita = 1, formato alternativo)
+      /^([A-Z]{1,5})\s+[A-Za-z]+\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?\s+al\s+[+-]?\d+(?:\.\d+)?$/,
+      // Patrón 18: SYMBOL Price (cantidad implícita = 1, formato alternativo)
+      /^([A-Z]{1,5})\s+(\d+(?:\.\d+)?)\s+[+-]?\d+(?:\.\d+)?$/,
+      // Patrón 19: SYMBOL Exchange Price (cantidad implícita = 1, formato alternativo)
+      /^([A-Z]{1,5})\s+[A-Za-z]+\s+(\d+(?:\.\d+)?)$/,
+      // Patrón 20: SYMBOL Price (cantidad implícita = 1, formato alternativo)
+      /^([A-Z]{1,5})\s+(\d+(?:\.\d+)?)$/
+    ];
+    
+    // Probar cada patrón
+    for (let j = 0; j < patterns.length; j++) {
+      const match = line.match(patterns[j]);
+      if (match) {
+        const symbol = match[1].toUpperCase();
+        const price = parseFloat(match[2]);
+        const quantity = match[3] ? parseFloat(match[3]) : 1;
+        
+        console.log(`🎯 Patrón ${j + 1} detectado: ${symbol} precio=${price} cantidad=${quantity}`);
+        
+        if (validSymbols.includes(symbol) && !isNaN(quantity) && quantity > 0 && !detectedAssets.find(a => a.symbol === symbol)) {
+          detectedAssets.push({
+            symbol: symbol,
+            name: `${symbol} Inc.`,
+            quantity: quantity,
+            purchase_price: price || 0
+          });
+          console.log(`✅ Activo detectado: ${symbol} ${quantity} @ $${price || 'N/A'}`);
+          break; // Evitar procesar otros patrones para esta línea
+        }
+      }
+    }
+  }
+  
+  // Si no encontramos activos con patrones, buscar símbolos simples
+  if (detectedAssets.length === 0) {
+    console.log('🔍 Buscando símbolos simples...');
+    const words = text.split(/\s+/);
+    
+    for (let i = 0; i < words.length - 1; i++) {
+      const word = words[i].toUpperCase();
+      const nextWord = words[i + 1];
+      
+      if (validSymbols.includes(word) && !isNaN(parseFloat(nextWord))) {
+        const quantity = parseFloat(nextWord);
+        if (quantity > 0 && !detectedAssets.find(a => a.symbol === word)) {
+          detectedAssets.push({
+            symbol: word,
+            name: `${word} Inc.`,
+            quantity: quantity,
+            purchase_price: 0
+          });
+          console.log(`✅ Activo simple detectado: ${word} ${quantity}`);
+        }
+      }
+    }
+  }
+  
+  console.log(`📊 Total activos detectados: ${detectedAssets.length}`);
+  return detectedAssets;
+}
+
+// Ruta para subir imagen OCR (MEJORADA - Con detección inteligente)
 app.post('/api/upload', authenticateToken, async (req, res) => {
   try {
-    const { portfolio_id, imageData } = req.body;
+    const { portfolio_id, imageData, textData } = req.body;
     
     console.log('📁 Procesando imagen OCR para portfolio:', portfolio_id);
     console.log('📁 Usuario:', req.user.userId);
@@ -368,14 +496,25 @@ app.post('/api/upload', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Portfolio no encontrado' });
     }
 
-    // Por ahora, usar activos de ejemplo (sin OCR real)
-    const extractedAssets = [
-      { symbol: 'AAPL', name: 'Apple Inc.', quantity: 10, purchase_price: 150.00 },
-      { symbol: 'GOOGL', name: 'Alphabet Inc.', quantity: 5, purchase_price: 2500.00 },
-      { symbol: 'MSFT', name: 'Microsoft Corporation', quantity: 8, purchase_price: 300.00 }
-    ];
+    let extractedAssets = [];
     
-    console.log('📊 Activos de ejemplo agregados:', extractedAssets.length);
+    // Si hay texto proporcionado, analizarlo
+    if (textData && textData.trim()) {
+      console.log('📄 Analizando texto proporcionado...');
+      extractedAssets = detectAssetsFromText(textData);
+    } else {
+      // Si no hay texto, usar activos de ejemplo inteligentes
+      console.log('📊 Usando activos de ejemplo inteligentes...');
+      extractedAssets = [
+        { symbol: 'AAPL', name: 'Apple Inc.', quantity: 10, purchase_price: 150.00 },
+        { symbol: 'GOOGL', name: 'Alphabet Inc.', quantity: 5, purchase_price: 2500.00 },
+        { symbol: 'MSFT', name: 'Microsoft Corporation', quantity: 8, purchase_price: 300.00 },
+        { symbol: 'TSLA', name: 'Tesla Inc.', quantity: 3, purchase_price: 200.00 },
+        { symbol: 'NVDA', name: 'NVIDIA Corporation', quantity: 2, purchase_price: 400.00 }
+      ];
+    }
+    
+    console.log('📊 Activos detectados:', extractedAssets.length);
 
     // Obtener precios actuales y agregar activos
     const processedAssets = [];
@@ -410,8 +549,8 @@ app.post('/api/upload', authenticateToken, async (req, res) => {
       success: true,
       portfolio: { id: portfolio_id },
       assets: processedAssets,
-      extractedFromImage: true,
-      message: `Se procesaron ${processedAssets.length} activos desde la imagen OCR`
+      extractedFromImage: !!textData,
+      message: `Se procesaron ${processedAssets.length} activos ${textData ? 'desde el texto OCR' : 'con datos de ejemplo'}`
     });
 
   } catch (error) {

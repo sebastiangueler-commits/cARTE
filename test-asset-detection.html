@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Prueba de Detección de Activos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success { background: rgba(76, 175, 80, 0.3); }
+        .error { background: rgba(244, 67, 54, 0.3); }
+        .loading { background: rgba(255, 193, 7, 0.3); }
+        .info { background: rgba(33, 150, 243, 0.3); }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover { background: #45a049; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 14px;
+            font-family: monospace;
+        }
+        .url-input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .asset-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+        .examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .example {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .example:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Prueba de Detección de Activos Inteligente</h1>
+        <p>Prueba la nueva detección mejorada de activos con diferentes formatos de texto.</p>
+        
+        <div class="test-section">
+            <h2>🔗 Configuración de URL</h2>
+            <input type="text" id="apiUrl" class="url-input" placeholder="https://admincarteras.netlify.app" value="https://admincarteras.netlify.app">
+            <p><small>Ingresa la URL de tu aplicación desplegada en Netlify</small></p>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 Ejemplos de Texto para Probar</h2>
+            <div class="examples">
+                <div class="example" onclick="loadExample('broker1')">
+                    <h4>📊 Broker Formato 1</h4>
+                    <pre>AAPL nasdaq 150.25 +2.15 10 21.50
+GOOGL nasdaq 2500.00 -15.30 5 -76.50
+MSFT nasdaq 300.45 +1.20 8 9.60</pre>
+                </div>
+                
+                <div class="example" onclick="loadExample('broker2')">
+                    <h4>📈 Broker Formato 2</h4>
+                    <pre>TSLA nyse 200.00 +5.00 3 15.00
+NVDA nasdaq 400.50 -2.25 2 -4.50
+AMZN nasdaq 3200.00 +10.00 1 10.00</pre>
+                </div>
+                
+                <div class="example" onclick="loadExample('broker3')">
+                    <h4>💼 Broker Formato 3</h4>
+                    <pre>SPY arca 450.00 +1.50 20 30.00
+QQQ nasdaq 380.25 -0.75 15 -11.25
+VTI nyse 220.00 +0.50 25 12.50</pre>
+                </div>
+                
+                <div class="example" onclick="loadExample('simple')">
+                    <h4>🎯 Formato Simple</h4>
+                    <pre>AAPL 10
+GOOGL 5
+MSFT 8
+TSLA 3</pre>
+                </div>
+                
+                <div class="example" onclick="loadExample('mixed')">
+                    <h4>🔄 Formato Mixto</h4>
+                    <pre>Apple Inc. (AAPL) - 10 shares @ $150.25
+Google (GOOGL) - 5 shares @ $2500.00
+Microsoft (MSFT) - 8 shares @ $300.45</pre>
+                </div>
+                
+                <div class="example" onclick="loadExample('complex')">
+                    <h4>🏢 Formato Complejo</h4>
+                    <pre>Portfolio Holdings:
+AAPL nasdaq 150.25 +2.15 10 21.50
+GOOGL nasdaq 2500.00 -15.30 5 -76.50
+MSFT nasdaq 300.45 +1.20 8 9.60
+TSLA nyse 200.00 +5.00 3 15.00
+NVDA nasdaq 400.50 -2.25 2 -4.50</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Probar Detección</h2>
+            <textarea id="testText" placeholder="Pega aquí el texto de tu portfolio o selecciona un ejemplo de arriba..."></textarea>
+            <button onclick="testAssetDetection()">🔍 Probar Detección</button>
+            <button onclick="clearResults()">🗑️ Limpiar</button>
+            
+            <div id="results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Resultados de Detección</h2>
+            <div id="detectionResults"></div>
+        </div>
+    </div>
+
+    <script>
+        let apiUrl = 'https://admincarteras.netlify.app';
+        let authToken = null;
+        
+        function updateUrl() {
+            apiUrl = document.getElementById('apiUrl').value.replace(/\/$/, '');
+        }
+        
+        document.getElementById('apiUrl').addEventListener('input', updateUrl);
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        function loadExample(type) {
+            const examples = {
+                broker1: `AAPL nasdaq 150.25 +2.15 10 21.50
+GOOGL nasdaq 2500.00 -15.30 5 -76.50
+MSFT nasdaq 300.45 +1.20 8 9.60`,
+                broker2: `TSLA nyse 200.00 +5.00 3 15.00
+NVDA nasdaq 400.50 -2.25 2 -4.50
+AMZN nasdaq 3200.00 +10.00 1 10.00`,
+                broker3: `SPY arca 450.00 +1.50 20 30.00
+QQQ nasdaq 380.25 -0.75 15 -11.25
+VTI nyse 220.00 +0.50 25 12.50`,
+                simple: `AAPL 10
+GOOGL 5
+MSFT 8
+TSLA 3`,
+                mixed: `Apple Inc. (AAPL) - 10 shares @ $150.25
+Google (GOOGL) - 5 shares @ $2500.00
+Microsoft (MSFT) - 8 shares @ $300.45`,
+                complex: `Portfolio Holdings:
+AAPL nasdaq 150.25 +2.15 10 21.50
+GOOGL nasdaq 2500.00 -15.30 5 -76.50
+MSFT nasdaq 300.45 +1.20 8 9.60
+TSLA nyse 200.00 +5.00 3 15.00
+NVDA nasdaq 400.50 -2.25 2 -4.50`
+            };
+            
+            document.getElementById('testText').value = examples[type];
+            addResult(`📝 Ejemplo "${type}" cargado`, 'info');
+        }
+        
+        async function login() {
+            try {
+                const response = await fetch(`${apiUrl}/.netlify/functions/api/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.token;
+                    addResult('✅ Login exitoso', 'success');
+                    return true;
+                } else {
+                    addResult('❌ Error en login', 'error');
+                    return false;
+                }
+            } catch (error) {
+                addResult(`❌ Error de conexión: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function testAssetDetection() {
+            const text = document.getElementById('testText').value.trim();
+            
+            if (!text) {
+                addResult('❌ Por favor ingresa texto para probar', 'error');
+                return;
+            }
+            
+            addResult('🔍 Iniciando prueba de detección...', 'loading');
+            
+            // Login si es necesario
+            if (!authToken) {
+                const loginSuccess = await login();
+                if (!loginSuccess) return;
+            }
+            
+            try {
+                // Crear un portfolio temporal para la prueba
+                const portfolioResponse = await fetch(`${apiUrl}/.netlify/functions/api/api/portfolios`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        name: 'Prueba Detección',
+                        description: 'Portfolio temporal para probar detección'
+                    })
+                });
+                
+                if (!portfolioResponse.ok) {
+                    addResult('❌ Error creando portfolio temporal', 'error');
+                    return;
+                }
+                
+                const portfolioData = await portfolioResponse.json();
+                const portfolioId = portfolioData.id;
+                
+                addResult(`✅ Portfolio temporal creado (ID: ${portfolioId})`, 'success');
+                
+                // Probar detección de activos
+                const detectionResponse = await fetch(`${apiUrl}/.netlify/functions/api/api/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        portfolio_id: portfolioId,
+                        textData: text
+                    })
+                });
+                
+                if (detectionResponse.ok) {
+                    const detectionData = await detectionResponse.json();
+                    displayResults(detectionData);
+                    addResult(`✅ Detección completada - ${detectionData.assets.length} activos encontrados`, 'success');
+                } else {
+                    const errorData = await detectionResponse.json();
+                    addResult(`❌ Error en detección: ${errorData.error}`, 'error');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('detectionResults');
+            resultsDiv.innerHTML = '';
+            
+            if (data.assets && data.assets.length > 0) {
+                const title = document.createElement('h3');
+                title.textContent = `🎯 ${data.assets.length} Activos Detectados:`;
+                resultsDiv.appendChild(title);
+                
+                data.assets.forEach(asset => {
+                    const assetDiv = document.createElement('div');
+                    assetDiv.className = 'asset-item';
+                    assetDiv.innerHTML = `
+                        <strong>${asset.symbol}</strong> - ${asset.name}<br>
+                        Cantidad: ${asset.quantity} | Precio Compra: $${asset.purchase_price}<br>
+                        Precio Actual: $${asset.current_price} | Valor: $${(asset.quantity * asset.current_price).toFixed(2)}
+                    `;
+                    resultsDiv.appendChild(assetDiv);
+                });
+            } else {
+                const noResults = document.createElement('div');
+                noResults.className = 'status error';
+                noResults.textContent = '❌ No se detectaron activos en el texto';
+                resultsDiv.appendChild(noResults);
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('testText').value = '';
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('detectionResults').innerHTML = '';
+            addResult('🗑️ Resultados limpiados', 'info');
+        }
+        
+        // Auto-login al cargar
+        window.addEventListener('load', () => {
+            addResult('🧪 Página de prueba cargada - Lista para probar detección', 'success');
+        });
+    </script>
+</body>
+</html>
