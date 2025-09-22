@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Test Simple - Portfolio Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover { background: #45a049; }
+        .result {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+        .success { border-left: 4px solid #4CAF50; }
+        .error { border-left: 4px solid #f44336; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Simple - Portfolio Manager</h1>
+        <p>Prueba básica para verificar que la función de Netlify funciona.</p>
+        
+        <div>
+            <h3>🔗 URL Base:</h3>
+            <input type="text" id="baseUrl" value="https://admincarteras.netlify.app" style="width: 100%; padding: 10px; margin: 10px 0;">
+        </div>
+
+        <div>
+            <button onclick="testHealth()">🏥 Test Health</button>
+            <button onclick="testLogin()">🔐 Test Login</button>
+            <button onclick="testPortfolios()">📁 Test Portfolios</button>
+            <button onclick="testUpload()">📤 Test Upload</button>
+            <button onclick="clearResults()">🗑️ Limpiar</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function addResult(message, type = 'success') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function getBaseUrl() {
+            return document.getElementById('baseUrl').value.replace(/\/$/, '');
+        }
+
+        async function testHealth() {
+            const url = `${getBaseUrl()}/.netlify/functions/api/health`;
+            addResult(`🏥 Probando: ${url}`);
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.text();
+                
+                if (response.ok) {
+                    addResult(`✅ Health OK: ${data}`, 'success');
+                } else {
+                    addResult(`❌ Health Error ${response.status}: ${data}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLogin() {
+            const url = `${getBaseUrl()}/.netlify/functions/api/auth/login`;
+            addResult(`🔐 Probando login: ${url}`);
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.text();
+                
+                if (response.ok) {
+                    addResult(`✅ Login OK: ${data}`, 'success');
+                } else {
+                    addResult(`❌ Login Error ${response.status}: ${data}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testPortfolios() {
+            const url = `${getBaseUrl()}/.netlify/functions/api/portfolios`;
+            addResult(`📁 Probando portfolios: ${url}`);
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: 'Test Portfolio',
+                        description: 'Portfolio de prueba'
+                    })
+                });
+                
+                const data = await response.text();
+                
+                if (response.ok) {
+                    addResult(`✅ Portfolio OK: ${data}`, 'success');
+                } else {
+                    addResult(`❌ Portfolio Error ${response.status}: ${data}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testUpload() {
+            const url = `${getBaseUrl()}/.netlify/functions/api/upload`;
+            addResult(`📤 Probando upload: ${url}`);
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        portfolio_id: 1,
+                        textData: 'AAPL 10\nGOOGL 5\nMSFT 8'
+                    })
+                });
+                
+                const data = await response.text();
+                
+                if (response.ok) {
+                    addResult(`✅ Upload OK: ${data}`, 'success');
+                } else {
+                    addResult(`❌ Upload Error ${response.status}: ${data}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            addResult('🗑️ Resultados limpiados');
+        }
+
+        // Auto-test al cargar
+        window.addEventListener('load', () => {
+            addResult('🧪 Página de test cargada - Lista para probar');
+        });
+    </script>
+</body>
+</html>
