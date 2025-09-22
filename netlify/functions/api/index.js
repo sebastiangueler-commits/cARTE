@@ -43,7 +43,7 @@ let users = [
     id: 1,
     username: 'admin',
     email: 'admin@portfolio.com',
-    password_hash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // admin123
+    password_hash: '$2a$10$QQJGk.ZA68CVogSjuK8QQ.S49RWY2D7gdQx8jkSk/BKAXNVhVvboS', // admin123
     full_name: 'Administrador',
     created_at: new Date().toISOString(),
     last_login: null
@@ -58,7 +58,7 @@ function ensureAdminUser() {
       id: 1,
       username: 'admin',
       email: 'admin@portfolio.com',
-      password_hash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+      password_hash: '$2a$10$QQJGk.ZA68CVogSjuK8QQ.S49RWY2D7gdQx8jkSk/BKAXNVhVvboS',
       full_name: 'Administrador',
       created_at: new Date().toISOString(),
       last_login: null
@@ -132,19 +132,33 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     
+    console.log('🔐 Intentando login:', { username, password: password ? '***' : 'undefined' });
+    
     const user = users.find(u => u.username === username);
-    if (!user || !await bcrypt.compare(password, user.password_hash)) {
+    console.log('🔍 Usuario encontrado:', user ? 'Sí' : 'No');
+    
+    if (!user) {
+      console.log('❌ Usuario no encontrado');
+      return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+    
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    console.log('🔐 Contraseña coincide:', passwordMatch);
+    
+    if (!passwordMatch) {
+      console.log('❌ Contraseña incorrecta');
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
     const token = jwt.sign({ userId: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
+    console.log('✅ Login exitoso para:', username);
 
     res.json({ 
       token, 
       user: { id: user.id, username: user.username, email: user.email, fullName: user.full_name }
     });
   } catch (error) {
-    console.error('Error en login:', error);
+    console.error('❌ Error en login:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
