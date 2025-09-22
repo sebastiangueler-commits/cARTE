@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { createWorker } = require('tesseract.js');
 
 // Configuración
 const JWT_SECRET = process.env.JWT_SECRET || 'portfolio-manager-secret-key-2024';
@@ -69,6 +70,88 @@ async function getYahooPrice(symbol) {
   }
   
   return null;
+}
+
+// Función para extraer activos de imagen OCR
+async function extractAssetsFromImage(imageData) {
+  try {
+    console.log('🔍 Procesando imagen con OCR real...');
+    
+    const worker = await createWorker('eng');
+    
+    const { data: { text } } = await worker.recognize(imageData);
+    await worker.terminate();
+    
+    console.log('📄 Texto extraído de la imagen:');
+    console.log('──────────────────────────────────────────────────');
+    console.log(text);
+    console.log('──────────────────────────────────────────────────');
+    
+    return parseAssetsFromText(text);
+  } catch (error) {
+    console.error('Error en OCR:', error);
+    return [];
+  }
+}
+
+// Función para parsear activos del texto OCR
+function parseAssetsFromText(text) {
+  const lines = text.split('\n');
+  const assets = [];
+  const seenSymbols = new Set();
+  
+  console.log('🔍 Analizando líneas del texto extraído...');
+  
+  for (const line of lines) {
+    console.log('📝 Analizando línea:', `"${line}"`);
+    
+    // Patrones para detectar activos en diferentes formatos de broker
+    const patterns = [
+      // Patrón 1: SYMBOL Exchange Price Change Quantity PnL
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)\s+[+-]?\d+\.?\d*$/,
+      // Patrón 2: SYMBOL Exchange Price Change Quantity
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)$/,
+      // Patrón 3: SYMBOL Exchange Price Quantity
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+(\d+)$/,
+      // Patrón 4: SYMBOL Price Change Quantity
+      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)$/,
+      // Patrón 5: SYMBOL Exchange Price (cantidad implícita = 1)
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+al\s+[+-]?\d+\.?\d*$/,
+      // Patrón 6: SYMBOL Price (cantidad implícita = 1)
+      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
+      // Patrón 7: SYMBOL Exchange Price Change Quantity (formato más específico)
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)\s+[+-]?\d+\.?\d*$/,
+      // Patrón 8: SYMBOL Exchange Price Quantity (formato específico)
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+(\d+)\s+[+-]?\d+\.?\d*$/,
+      // Patrón 9: SYMBOL Exchange Price (cantidad implícita = 1, formato específico)
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+al\s+[+-]?\d+\.?\d*$/
+    ];
+    
+    for (let i = 0; i < patterns.length; i++) {
+      const match = line.match(patterns[i]);
+      if (match) {
+        const symbol = match[1];
+        const price = parseFloat(match[2]);
+        const quantity = match[3] ? parseInt(match[3]) : 1;
+        
+        if (!seenSymbols.has(symbol) && price > 0 && quantity > 0) {
+          console.log(`🎯 Patrón ${i + 1} broker detectado: ${symbol} precio=${price} cantidad=${quantity}`);
+          assets.push({
+            symbol,
+            name: `${symbol} Inc.`,
+            quantity,
+            purchase_price: price
+          });
+          seenSymbols.add(symbol);
+          console.log(`✅ Activo agregado: ${symbol} ${quantity} @ $${price}`);
+        }
+        break;
+      }
+    }
+  }
+  
+  console.log(`📊 Total activos detectados: ${assets.length}`);
+  return assets;
 }
 
 // Rutas de autenticación
@@ -280,13 +363,20 @@ app.get('/api/dashboard/stats', authenticateToken, (req, res) => {
   }
 });
 
-// Ruta para subir imagen OCR (simplificada)
+// Ruta para subir imagen OCR (REAL)
 app.post('/api/upload', authenticateToken, async (req, res) => {
   try {
-    const { portfolio_id } = req.body;
+    const { portfolio_id, imageData } = req.body;
+    
+    console.log('📁 Procesando imagen OCR para portfolio:', portfolio_id);
+    console.log('📁 Usuario:', req.user.userId);
     
     if (!portfolio_id) {
       return res.status(400).json({ error: 'ID de portfolio requerido' });
+    }
+
+    if (!imageData) {
+      return res.status(400).json({ error: 'Imagen requerida para procesar' });
     }
 
     // Verificar que el portfolio pertenece al usuario
@@ -295,42 +385,55 @@ app.post('/api/upload', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Portfolio no encontrado' });
     }
 
-    // Activos de demostración para Netlify
-    const demoAssets = [
-      { symbol: 'AAPL', name: 'Apple Inc.', quantity: 10, purchase_price: 150.00 },
-      { symbol: 'GOOGL', name: 'Alphabet Inc.', quantity: 5, purchase_price: 2500.00 },
-      { symbol: 'MSFT', name: 'Microsoft Corporation', quantity: 8, purchase_price: 300.00 },
-      { symbol: 'TSLA', name: 'Tesla Inc.', quantity: 3, purchase_price: 800.00 },
-      { symbol: 'AMZN', name: 'Amazon.com Inc.', quantity: 2, purchase_price: 3200.00 }
-    ];
+    // Procesar imagen con OCR REAL
+    console.log('🔍 Iniciando análisis con Tesseract.js...');
+    const extractedAssets = await extractAssetsFromImage(imageData);
+    
+    console.log('📊 Activos extraídos del OCR:', extractedAssets.length);
 
-    // Obtener precios actuales
-    for (let asset of demoAssets) {
+    if (extractedAssets.length === 0) {
+      return res.json({
+        success: false,
+        message: 'No se pudieron detectar activos en la imagen. Asegúrate de que la imagen sea clara y contenga información de cartera.',
+        extractedFromImage: true
+      });
+    }
+
+    // Obtener precios actuales y agregar activos
+    const processedAssets = [];
+    for (let asset of extractedAssets) {
+      console.log(`🔍 Obteniendo precio para ${asset.symbol}...`);
       const currentPrice = await getYahooPrice(asset.symbol);
-      asset.current_price = currentPrice || asset.purchase_price;
       
-      // Insertar activo
-      const newAsset = {
-        id: assets.length + 1,
-        symbol: asset.symbol,
-        name: asset.name,
-        quantity: asset.quantity,
-        purchase_price: asset.purchase_price,
-        current_price: asset.current_price,
-        portfolio_id: parseInt(portfolio_id),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      assets.push(newAsset);
+      if (currentPrice) {
+        console.log(`✅ Precio obtenido para ${asset.symbol}: $${currentPrice}`);
+        
+        // Insertar activo
+        const newAsset = {
+          id: assets.length + 1,
+          symbol: asset.symbol,
+          name: asset.name,
+          quantity: asset.quantity,
+          purchase_price: asset.purchase_price,
+          current_price: currentPrice,
+          portfolio_id: parseInt(portfolio_id),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        assets.push(newAsset);
+        processedAssets.push(newAsset);
+      } else {
+        console.log(`❌ No se pudo obtener precio para ${asset.symbol}`);
+      }
     }
 
     res.json({
       success: true,
       portfolio: { id: portfolio_id },
-      assets: demoAssets,
-      extractedFromImage: false,
-      message: `Se agregaron ${demoAssets.length} activos de demostración al portfolio`
+      assets: processedAssets,
+      extractedFromImage: true,
+      message: `Se procesaron ${processedAssets.length} activos desde la imagen OCR`
     });
 
   } catch (error) {
