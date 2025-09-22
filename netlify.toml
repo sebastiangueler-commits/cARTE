@@ -7,6 +7,7 @@
   JWT_SECRET = "portfolio-manager-secret-key-2024-production"
   NODE_ENV = "production"
   CLIENT_URL = "https://admincarteras.netlify.app"
+  # Force Node.js 18 runtime for functions
 
 [[redirects]]
   from = "/api/*"
