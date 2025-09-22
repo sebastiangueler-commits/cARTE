@@ -565,9 +565,10 @@
     <script type="text/babel">
         const { useState, useEffect, useCallback } = React;
 
-        // API Helper
+        // API Helper - Detectar si estamos en producción o desarrollo
+        const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
         const api = {
-            baseUrl: '/api',
+            baseUrl: isProduction ? '/.netlify/functions/api/api' : '/api',
             
             async request(endpoint, options = {}) {
                 const token = localStorage.getItem('token');
@@ -596,10 +597,10 @@
             },
 
             // Auth
-            async login(email, password) {
+            async login(username, password) {
                 return this.request('/auth/login', {
                     method: 'POST',
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ username, password })
                 });
             },
 
@@ -670,9 +671,9 @@
                 setLoading(false);
             }, []);
 
-            const login = async (email, password) => {
+            const login = async (username, password) => {
                 try {
-                    const response = await api.login(email, password);
+                    const response = await api.login(username, password);
                     localStorage.setItem('token', response.token);
                     setUser(response.user);
                     return response;
@@ -707,7 +708,7 @@
         // Login Component
         const Login = () => {
             const [isLogin, setIsLogin] = useState(true);
-            const [formData, setFormData] = useState({ email: '', password: '', name: '' });
+            const [formData, setFormData] = useState({ username: '', password: '', name: '' });
             const [error, setError] = useState('');
             const [loading, setLoading] = useState(false);
             const { login, register } = React.useContext(AuthContext);
@@ -719,7 +720,7 @@
 
                 try {
                     if (isLogin) {
-                        await login(formData.email, formData.password);
+                        await login(formData.username, formData.password);
                     } else {
                         await register(formData.email, formData.password, formData.name);
                     }
@@ -754,12 +755,12 @@
                             )}
                             
                             <div className="form-group">
-                                <label className="form-label">Email</label>
+                                <label className="form-label">Usuario</label>
                                 <input
-                                    type="email"
+                                    type="text"
                                     className="form-input"
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                    value={formData.username}
+                                    onChange={(e) => setFormData({...formData, username: e.target.value})}
                                     required
                                 />
                             </div>
