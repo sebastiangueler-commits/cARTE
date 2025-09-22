@@ -79,6 +79,12 @@ async function extractAssetsFromImage(imageData) {
     
     const worker = await createWorker('eng');
     
+    // Configurar OCR para mejor detección de texto financiero
+    await worker.setParameters({
+      tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,+-$%()[]{}:; ',
+      tessedit_pageseg_mode: '6' // Uniform block of text
+    });
+    
     const { data: { text } } = await worker.recognize(imageData);
     await worker.terminate();
     
@@ -87,7 +93,19 @@ async function extractAssetsFromImage(imageData) {
     console.log(text);
     console.log('──────────────────────────────────────────────────');
     
-    return parseAssetsFromText(text);
+    // Limpiar y normalizar el texto
+    const cleanedText = text
+      .replace(/\r\n/g, '\n')  // Normalizar saltos de línea
+      .replace(/\r/g, '\n')    // Normalizar saltos de línea
+      .replace(/\s+/g, ' ')    // Normalizar espacios
+      .trim();
+    
+    console.log('🧹 Texto limpiado:');
+    console.log('──────────────────────────────────────────────────');
+    console.log(cleanedText);
+    console.log('──────────────────────────────────────────────────');
+    
+    return parseAssetsFromText(cleanedText);
   } catch (error) {
     console.error('Error en OCR:', error);
     return [];
@@ -105,7 +123,15 @@ function parseAssetsFromText(text) {
   for (const line of lines) {
     console.log('📝 Analizando línea:', `"${line}"`);
     
-    // Patrones para detectar activos en diferentes formatos de broker
+    // Limpiar línea de caracteres extraños
+    const cleanLine = line
+      .replace(/[^\w\s.,+-$%()[]{}:;]/g, '') // Solo caracteres válidos
+      .replace(/\s+/g, ' ') // Normalizar espacios
+      .trim();
+    
+    if (!cleanLine) continue;
+    
+    // Patrones UNIVERSALES para detectar activos en CUALQUIER formato de broker
     const patterns = [
       // Patrón 1: SYMBOL Exchange Price Change Quantity PnL
       /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)\s+[+-]?\d+\.?\d*$/,
@@ -124,11 +150,57 @@ function parseAssetsFromText(text) {
       // Patrón 8: SYMBOL Exchange Price Quantity (formato específico)
       /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+(\d+)\s+[+-]?\d+\.?\d*$/,
       // Patrón 9: SYMBOL Exchange Price (cantidad implícita = 1, formato específico)
-      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+al\s+[+-]?\d+\.?\d*$/
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+al\s+[+-]?\d+\.?\d*$/,
+      
+      // PATRONES ADICIONALES PARA MAYOR COMPATIBILIDAD
+      // Patrón 10: SYMBOL Price Quantity (sin exchange)
+      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+(\d+)$/,
+      // Patrón 11: SYMBOL Price (cantidad implícita = 1, sin exchange)
+      /^([A-Z]{1,5})\s+(\d+\.?\d*)$/,
+      // Patrón 12: SYMBOL Exchange Price (cantidad implícita = 1)
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)$/,
+      // Patrón 13: SYMBOL Exchange Price Change (cantidad implícita = 1)
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
+      // Patrón 14: SYMBOL Price Change (cantidad implícita = 1)
+      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
+      // Patrón 15: SYMBOL Exchange Price Quantity (formato alternativo)
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+(\d+)\s+[+-]?\d+\.?\d*$/,
+      // Patrón 16: SYMBOL Exchange Price Change Quantity (formato alternativo)
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)\s+[+-]?\d+\.?\d*$/,
+      // Patrón 17: SYMBOL Exchange Price (cantidad implícita = 1, formato alternativo)
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+al\s+[+-]?\d+\.?\d*$/,
+      // Patrón 18: SYMBOL Price (cantidad implícita = 1, formato alternativo)
+      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
+      // Patrón 19: SYMBOL Exchange Price (cantidad implícita = 1, formato alternativo)
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)$/,
+      // Patrón 20: SYMBOL Price (cantidad implícita = 1, formato alternativo)
+      /^([A-Z]{1,5})\s+(\d+\.?\d*)$/,
+      
+      // PATRONES FLEXIBLES PARA MAYOR COMPATIBILIDAD
+      // Patrón 21: SYMBOL Exchange Price (flexible)
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
+      // Patrón 22: SYMBOL Price (flexible)
+      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
+      // Patrón 23: SYMBOL Exchange Price (muy flexible)
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)$/,
+      // Patrón 24: SYMBOL Price (muy flexible)
+      /^([A-Z]{1,5})\s+(\d+\.?\d*)$/,
+      // Patrón 25: SYMBOL Exchange Price Change (muy flexible)
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
+      // Patrón 26: SYMBOL Price Change (muy flexible)
+      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*$/,
+      // Patrón 27: SYMBOL Exchange Price Quantity (muy flexible)
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+(\d+)$/,
+      // Patrón 28: SYMBOL Price Quantity (muy flexible)
+      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+(\d+)$/,
+      // Patrón 29: SYMBOL Exchange Price Change Quantity (muy flexible)
+      /^([A-Z]{1,5})\s+[a-zA-Z]+\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)$/,
+      // Patrón 30: SYMBOL Price Change Quantity (muy flexible)
+      /^([A-Z]{1,5})\s+(\d+\.?\d*)\s+[+-]?\d+\.?\d*\s+(\d+)$/
     ];
     
     for (let i = 0; i < patterns.length; i++) {
-      const match = line.match(patterns[i]);
+      const match = cleanLine.match(patterns[i]);
       if (match) {
         const symbol = match[1];
         const price = parseFloat(match[2]);
