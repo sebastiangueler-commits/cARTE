@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Button</title>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 800px;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test del Botón viewPortfolio</h1>
+    
+    <button class="btn btn-primary" onclick="testViewPortfolio()">Probar viewPortfolio</button>
+    
+    <div id="test-results"></div>
+
+    <script>
+        // Datos de prueba
+        const portfolios = [
+            {
+                id: 1,
+                name: "Portfolio Test",
+                asset_count: 2,
+                total_value: 1227.5,
+                total_cost: 1250,
+                total_gain_loss: -22.5,
+                total_gain_loss_percent: -1.8,
+                assets: [
+                    {
+                        symbol: "AAPL",
+                        quantity: 5,
+                        purchase_price: 150,
+                        current_price: 245.5
+                    },
+                    {
+                        symbol: "GOOGL", 
+                        quantity: 2,
+                        purchase_price: 250,
+                        current_price: 254.72
+                    }
+                ]
+            }
+        ];
+
+        function testViewPortfolio() {
+            console.log('🔍 Probando viewPortfolio...');
+            viewPortfolio(1);
+        }
+
+        function viewPortfolio(id) {
+            console.log('🔍 viewPortfolio llamado con ID:', id);
+            console.log('📊 Portfolios disponibles:', portfolios);
+            
+            const portfolio = portfolios.find(p => p.id === id);
+            console.log('🎯 Portfolio encontrado:', portfolio);
+            
+            if (!portfolio) {
+                console.error('❌ Portfolio no encontrado con ID:', id);
+                alert('Portfolio no encontrado');
+                return;
+            }
+            
+            // Crear modal para mostrar detalles del portfolio
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>📊 ${portfolio.name}</h3>
+                        <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                            ✕ Cerrar
+                        </button>
+                    </div>
+                    <div>
+                        <h4>Estadísticas:</h4>
+                        <p><strong>Total Activos:</strong> ${portfolio.asset_count}</p>
+                        <p><strong>Valor Actual:</strong> $${portfolio.total_value}</p>
+                        <p><strong>Valor Compra:</strong> $${portfolio.total_cost}</p>
+                        <p><strong>Ganancia:</strong> $${portfolio.total_gain_loss}</p>
+                        
+                        <h4>Activos:</h4>
+                        <table border="1" style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <th>Símbolo</th>
+                                <th>Cantidad</th>
+                                <th>Valor Compra</th>
+                                <th>Valor Actual</th>
+                                <th>Ganancia</th>
+                            </tr>
+                            ${portfolio.assets.map(asset => {
+                                const nominal = asset.quantity * asset.purchase_price;
+                                const currentValue = asset.quantity * asset.current_price;
+                                const gain = currentValue - nominal;
+                                
+                                return `
+                                    <tr>
+                                        <td>${asset.symbol}</td>
+                                        <td>${asset.quantity}</td>
+                                        <td>$${asset.purchase_price}</td>
+                                        <td>$${asset.current_price}</td>
+                                        <td>$${gain.toFixed(2)}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            console.log('✅ Modal creado y agregado al DOM');
+        }
+    </script>
+</body>
+</html>

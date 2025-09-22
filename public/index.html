@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Investment Portfolio Manager - OCR Inteligente</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        
+        .app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .nav button {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .nav button:hover, .nav button.active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .main-content {
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #64748b;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+        }
+        
+        .btn-success {
+            background: #10b981;
+        }
+        
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .profit {
+            color: #10b981;
+        }
+        
+        .loss {
+            color: #ef4444;
+        }
+        
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .portfolio-item {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        
+        .portfolio-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .portfolio-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        
+        .portfolio-description {
+            color: #64748b;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .portfolio-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        
+        .portfolio-change {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .asset-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        
+        .asset-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .asset-info {
+            flex: 1;
+        }
+        
+        .asset-symbol {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .asset-name {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .asset-details {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+        
+        .asset-values {
+            text-align: right;
+        }
+        
+        .asset-price {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .asset-change {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .close {
+            color: #9ca3af;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .close:hover {
+            color: #374151;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+        
+        .error {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            border: 1px solid #fecaca;
+        }
+        
+        .success {
+            background: #f0fdf4;
+            color: #16a34a;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 1rem 0;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 3rem;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .login-title {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: #1e293b;
+        }
+        
+        .file-upload {
+            border: 2px dashed #d1d5db;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .file-upload:hover {
+            border-color: #667eea;
+            background-color: #f8fafc;
+        }
+        
+        .file-upload.dragover {
+            border-color: #667eea;
+            background-color: #f0f4ff;
+        }
+        
+        .ocr-preview {
+            background: #f8fafc;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .ocr-text {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #374151;
+            white-space: pre-wrap;
+        }
+        
+        .extracted-assets {
+            background: #f0fdf4;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .asset-preview {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 0.25rem;
+            margin: 0.25rem 0;
+            border: 1px solid #d1d5db;
+        }
+        
+        .instructions {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .instructions h4 {
+            color: #92400e;
+            margin-bottom: 0.5rem;
+        }
+        
+        .instructions ul {
+            color: #92400e;
+            margin-left: 1rem;
+        }
+        
+        .instructions li {
+            margin-bottom: 0.25rem;
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .portfolio-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .asset-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .asset-values {
+                text-align: left;
+                margin-top: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="loading">Cargando aplicación inteligente...</div>
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+
+        // API Helper
+        const api = {
+            baseUrl: '/api',
+            
+            async request(endpoint, options = {}) {
+                const token = localStorage.getItem('token');
+                const config = {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token && { Authorization: `Bearer ${token}` }),
+                        ...options.headers
+                    },
+                    ...options
+                };
+
+                try {
+                    const response = await fetch(`${this.baseUrl}${endpoint}`, config);
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Error en la solicitud');
+                    }
+                    
+                    return data;
+                } catch (error) {
+                    console.error('API Error:', error);
+                    throw error;
+                }
+            },
+
+            // Auth
+            async login(email, password) {
+                return this.request('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+            },
+
+            async register(email, password, name) {
+                return this.request('/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password, name })
+                });
+            },
+
+            // Portfolios
+            async getPortfolios() {
+                return this.request('/portfolios');
+            },
+
+            async createPortfolioFromImage(name, description, imageFile) {
+                const formData = new FormData();
+                formData.append('image', imageFile);
+                formData.append('name', name);
+                formData.append('description', description);
+                
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/portfolios/from-image', {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                return response.json();
+            },
+
+            // Assets
+            async getAssets(portfolioId) {
+                return this.request(`/assets/portfolio/${portfolioId}`);
+            },
+
+            async updatePrices(portfolioId) {
+                return this.request(`/assets/update-prices/${portfolioId}`, {
+                    method: 'POST'
+                });
+            },
+
+            // Financial
+            async getQuote(symbol) {
+                return this.request(`/financial/quote/${symbol}`);
+            }
+        };
+
+        // Auth Context
+        const AuthContext = React.createContext();
+
+        const AuthProvider = ({ children }) => {
+            const [user, setUser] = useState(null);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    try {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        setUser(payload);
+                    } catch (error) {
+                        localStorage.removeItem('token');
+                    }
+                }
+                setLoading(false);
+            }, []);
+
+            const login = async (email, password) => {
+                try {
+                    const response = await api.login(email, password);
+                    localStorage.setItem('token', response.token);
+                    setUser(response.user);
+                    return response;
+                } catch (error) {
+                    throw error;
+                }
+            };
+
+            const register = async (email, password, name) => {
+                try {
+                    const response = await api.register(email, password, name);
+                    localStorage.setItem('token', response.token);
+                    setUser(response.user);
+                    return response;
+                } catch (error) {
+                    throw error;
+                }
+            };
+
+            const logout = () => {
+                localStorage.removeItem('token');
+                setUser(null);
+            };
+
+            return (
+                <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+                    {children}
+                </AuthContext.Provider>
+            );
+        };
+
+        // Login Component
+        const Login = () => {
+            const [isLogin, setIsLogin] = useState(true);
+            const [formData, setFormData] = useState({ email: '', password: '', name: '' });
+            const [error, setError] = useState('');
+            const [loading, setLoading] = useState(false);
+            const { login, register } = React.useContext(AuthContext);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setError('');
+                setLoading(true);
+
+                try {
+                    if (isLogin) {
+                        await login(formData.email, formData.password);
+                    } else {
+                        await register(formData.email, formData.password, formData.name);
+                    }
+                } catch (error) {
+                    setError(error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="login-container">
+                    <div className="login-card">
+                        <h2 className="login-title">
+                            {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
+                        </h2>
+                        
+                        {error && <div className="error">{error}</div>}
+                        
+                        <form onSubmit={handleSubmit}>
+                            {!isLogin && (
+                                <div className="form-group">
+                                    <label className="form-label">Nombre</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                            )}
+                            
+                            <div className="form-group">
+                                <label className="form-label">Email</label>
+                                <input
+                                    type="email"
+                                    className="form-input"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                    required
+                                />
+                            </div>
+                            
+                            <div className="form-group">
+                                <label className="form-label">Contraseña</label>
+                                <input
+                                    type="password"
+                                    className="form-input"
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                                    required
+                                />
+                            </div>
+                            
+                            <button 
+                                type="submit" 
+                                className="btn" 
+                                style={{width: '100%'}}
+                                disabled={loading}
+                            >
+                                {loading ? 'Cargando...' : (isLogin ? 'Iniciar Sesión' : 'Registrarse')}
+                            </button>
+                        </form>
+                        
+                        <div style={{textAlign: 'center', marginTop: '1.5rem'}}>
+                            <button 
+                                type="button"
+                                onClick={() => setIsLogin(!isLogin)}
+                                style={{background: 'none', border: 'none', color: '#667eea', cursor: 'pointer'}}
+                            >
+                                {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
+                            </button>
+                        </div>
+                        
+                        <div style={{textAlign: 'center', marginTop: '1rem', fontSize: '0.875rem', color: '#64748b'}}>
+                            <p>Admin: admin@portfolio.com / admin123</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Dashboard Component
+        const Dashboard = () => {
+            const [portfolios, setPortfolios] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState('');
+
+            useEffect(() => {
+                loadData();
+            }, []);
+
+            const loadData = async () => {
+                try {
+                    const data = await api.getPortfolios();
+                    setPortfolios(data);
+                } catch (error) {
+                    setError(error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            if (loading) {
+                return <div className="loading">Cargando dashboard...</div>;
+            }
+
+            if (error) {
+                return <div className="error">{error}</div>;
+            }
+
+            const totalValue = portfolios.reduce((sum, p) => sum + (p.totalValue || 0), 0);
+            const totalCost = portfolios.reduce((sum, p) => sum + (p.totalCost || 0), 0);
+            const totalProfitLoss = totalValue - totalCost;
+            const totalProfitLossPercent = totalCost > 0 ? ((totalProfitLoss / totalCost) * 100) : 0;
+
+            return (
+                <div>
+                    <div className="success">
+                        ✅ ¡Aplicación inteligente funcionando! Sube una foto de tu cartera y la app la seguirá automáticamente.
+                    </div>
+                    
+                    <div className="stats-grid">
+                        <div className="stat-card">
+                            <div className="stat-value">${totalValue.toLocaleString()}</div>
+                            <div className="stat-label">Valor Total</div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-value">{portfolios.length}</div>
+                            <div className="stat-label">Carteras</div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-value">{portfolios.reduce((sum, p) => sum + (p.assetCount || 0), 0)}</div>
+                            <div className="stat-label">Activos</div>
+                        </div>
+                        <div className="stat-card">
+                            <div className={`stat-value ${totalProfitLoss >= 0 ? 'profit' : 'loss'}`}>
+                                {totalProfitLossPercent.toFixed(2)}%
+                            </div>
+                            <div className="stat-label">Rendimiento</div>
+                        </div>
+                    </div>
+                    
+                    <div className="card">
+                        <div className="card-header">
+                            <h3 className="card-title">💼 Mis Carteras</h3>
+                        </div>
+                        <div className="portfolio-grid">
+                            {portfolios.map(portfolio => (
+                                <div key={portfolio.id} className="portfolio-item">
+                                    <div className="portfolio-name">{portfolio.name}</div>
+                                    <div className="portfolio-description">{portfolio.description}</div>
+                                    <div className="portfolio-value">${portfolio.totalValue?.toLocaleString() || '0'}</div>
+                                    <div className={`portfolio-change ${portfolio.profitLoss >= 0 ? 'profit' : 'loss'}`}>
+                                        {portfolio.profitLoss >= 0 ? '+' : ''}${portfolio.profitLoss?.toLocaleString() || '0'} 
+                                        ({portfolio.profitLossPercent?.toFixed(2) || '0'}%)
+                                    </div>
+                                    <div style={{fontSize: '0.9rem', color: '#64748b'}}>
+                                        {portfolio.assetCount || 0} activos
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // OCR Portfolio Creator Component
+        const OCRPortfolioCreator = () => {
+            const [file, setFile] = useState(null);
+            const [formData, setFormData] = useState({ name: '', description: '' });
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+            const [success, setSuccess] = useState('');
+
+            const handleFileUpload = (e) => {
+                const selectedFile = e.target.files[0];
+                if (selectedFile) {
+                    setFile(selectedFile);
+                }
+            };
+
+            const handleDrop = (e) => {
+                e.preventDefault();
+                const droppedFile = e.dataTransfer.files[0];
+                if (droppedFile && droppedFile.type.startsWith('image/')) {
+                    setFile(droppedFile);
+                }
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+            };
+
+            const createPortfolio = async () => {
+                if (!file) {
+                    setError('Por favor selecciona una imagen de tu cartera');
+                    return;
+                }
+
+                if (!formData.name) {
+                    setError('Por favor ingresa un nombre para la cartera');
+                    return;
+                }
+
+                setLoading(true);
+                setError('');
+                setSuccess('');
+
+                try {
+                    const response = await api.createPortfolioFromImage(
+                        formData.name, 
+                        formData.description, 
+                        file
+                    );
+                    
+                    setSuccess(`¡Cartera creada exitosamente! Se extrajeron ${response.extractedAssets} activos automáticamente.`);
+                    setFile(null);
+                    setFormData({ name: '', description: '' });
+                } catch (error) {
+                    setError(error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div>
+                    <div className="card">
+                        <div className="card-header">
+                            <h3 className="card-title">📷 Crear Cartera desde Imagen</h3>
+                        </div>
+                        
+                        <div className="instructions">
+                            <h4>📋 Instrucciones:</h4>
+                            <ul>
+                                <li>Sube una foto clara de tu estado de cuenta o cartera de inversión</li>
+                                <li>La imagen debe contener información de activos (símbolos, cantidades, precios)</li>
+                                <li>La app extraerá automáticamente todos los activos y empezará a seguirlos</li>
+                                <li>Los precios se actualizarán automáticamente desde Yahoo Finance</li>
+                            </ul>
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Nombre de la Cartera</label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                value={formData.name}
+                                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                placeholder="Mi Cartera Principal"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Descripción (opcional)</label>
+                            <textarea
+                                className="form-textarea"
+                                value={formData.description}
+                                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                                placeholder="Descripción de la cartera..."
+                            />
+                        </div>
+                        
+                        <div className="form-group">
+                            <label className="form-label">Subir imagen de la cartera</label>
+                            <div 
+                                className="file-upload"
+                                onDrop={handleDrop}
+                                onDragOver={handleDragOver}
+                            >
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFileUpload}
+                                    style={{display: 'none'}}
+                                    id="file-input"
+                                />
+                                <label htmlFor="file-input" style={{cursor: 'pointer'}}>
+                                    {file ? (
+                                        <div>
+                                            <p>📄 {file.name}</p>
+                                            <p style={{fontSize: '0.9rem', color: '#64748b'}}>
+                                                Haz clic para cambiar
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <p>📁 Arrastra una imagen aquí o haz clic para seleccionar</p>
+                                            <p style={{fontSize: '0.9rem', color: '#64748b'}}>
+                                                Formatos soportados: JPG, PNG, GIF
+                                            </p>
+                                        </div>
+                                    )}
+                                </label>
+                            </div>
+                        </div>
+
+                        <button 
+                            className="btn" 
+                            onClick={createPortfolio}
+                            disabled={!file || !formData.name || loading}
+                        >
+                            {loading ? 'Procesando...' : '🚀 Crear Cartera Automáticamente'}
+                        </button>
+
+                        {error && <div className="error">{error}</div>}
+                        {success && <div className="success">{success}</div>}
+                    </div>
+                </div>
+            );
+        };
+
+        // Portfolio Management Component
+        const PortfolioManagement = () => {
+            const [portfolios, setPortfolios] = useState([]);
+            const [selectedPortfolio, setSelectedPortfolio] = useState(null);
+            const [assets, setAssets] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState('');
+
+            useEffect(() => {
+                loadPortfolios();
+            }, []);
+
+            const loadPortfolios = async () => {
+                try {
+                    const data = await api.getPortfolios();
+                    setPortfolios(data);
+                    if (data.length > 0 && !selectedPortfolio) {
+                        setSelectedPortfolio(data[0]);
+                        loadAssets(data[0].id);
+                    }
+                } catch (error) {
+                    setError(error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const loadAssets = async (portfolioId) => {
+                try {
+                    const data = await api.getAssets(portfolioId);
+                    setAssets(data);
+                } catch (error) {
+                    setError(error.message);
+                }
+            };
+
+            const handlePortfolioSelect = (portfolio) => {
+                setSelectedPortfolio(portfolio);
+                loadAssets(portfolio.id);
+            };
+
+            const updatePrices = async () => {
+                if (!selectedPortfolio) return;
+                
+                try {
+                    await api.updatePrices(selectedPortfolio.id);
+                    await loadAssets(selectedPortfolio.id);
+                } catch (error) {
+                    setError(error.message);
+                }
+            };
+
+            if (loading) {
+                return <div className="loading">Cargando carteras...</div>;
+            }
+
+            return (
+                <div>
+                    <div className="card">
+                        <div className="card-header">
+                            <h3 className="card-title">💼 Gestión de Carteras</h3>
+                        </div>
+                        
+                        {portfolios.length === 0 ? (
+                            <div style={{textAlign: 'center', padding: '2rem', color: '#64748b'}}>
+                                No tienes carteras creadas. ¡Crea tu primera cartera desde una imagen!
+                            </div>
+                        ) : (
+                            <div style={{display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap'}}>
+                                {portfolios.map(portfolio => (
+                                    <button
+                                        key={portfolio.id}
+                                        className={`btn ${selectedPortfolio?.id === portfolio.id ? 'btn-success' : 'btn-secondary'}`}
+                                        onClick={() => handlePortfolioSelect(portfolio)}
+                                    >
+                                        {portfolio.name}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {selectedPortfolio && (
+                        <div className="card">
+                            <div className="card-header">
+                                <h3 className="card-title">💰 Activos - {selectedPortfolio.name}</h3>
+                                <button className="btn btn-success" onClick={updatePrices}>
+                                    🔄 Actualizar Precios
+                                </button>
+                            </div>
+                            
+                            {assets.length === 0 ? (
+                                <div style={{textAlign: 'center', padding: '2rem', color: '#64748b'}}>
+                                    No tienes activos en esta cartera.
+                                </div>
+                            ) : (
+                                <div>
+                                    {assets.map(asset => (
+                                        <div key={asset.id} className="asset-item">
+                                            <div className="asset-info">
+                                                <div className="asset-symbol">{asset.symbol}</div>
+                                                <div className="asset-name">{asset.name}</div>
+                                                <div className="asset-details">
+                                                    {asset.shares} acciones • Comprado a ${asset.purchase_price.toFixed(2)}
+                                                    {asset.source === 'ocr' && <span style={{color: '#10b981', marginLeft: '0.5rem'}}>📷 OCR</span>}
+                                                </div>
+                                            </div>
+                                            <div className="asset-values">
+                                                <div className="asset-price">${asset.current_price.toFixed(2)}</div>
+                                                <div className={`asset-change ${asset.profitLoss >= 0 ? 'profit' : 'loss'}`}>
+                                                    {asset.profitLoss >= 0 ? '+' : ''}${asset.profitLoss.toFixed(2)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // Main App Component
+        const App = () => {
+            const { user, loading } = React.useContext(AuthContext);
+            const [currentSection, setCurrentSection] = useState('dashboard');
+
+            if (loading) {
+                return <div className="loading">Cargando aplicación...</div>;
+            }
+
+            if (!user) {
+                return <Login />;
+            }
+
+            return (
+                <div className="app">
+                    <header className="header">
+                        <div className="header-content">
+                            <div className="logo">
+                                📊 Investment Portfolio Manager
+                            </div>
+                            <nav className="nav">
+                                <button 
+                                    className={currentSection === 'dashboard' ? 'active' : ''}
+                                    onClick={() => setCurrentSection('dashboard')}
+                                >
+                                    📊 Dashboard
+                                </button>
+                                <button 
+                                    className={currentSection === 'create' ? 'active' : ''}
+                                    onClick={() => setCurrentSection('create')}
+                                >
+                                    📷 Crear Cartera
+                                </button>
+                                <button 
+                                    className={currentSection === 'portfolios' ? 'active' : ''}
+                                    onClick={() => setCurrentSection('portfolios')}
+                                >
+                                    💼 Carteras
+                                </button>
+                            </nav>
+                            <div className="user-info">
+                                <span>👋 Hola, {user.name}</span>
+                                <button 
+                                    className="btn btn-secondary btn-sm"
+                                    onClick={() => {
+                                        localStorage.removeItem('token');
+                                        window.location.reload();
+                                    }}
+                                >
+                                    Salir
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+                    
+                    <main className="main-content">
+                        {currentSection === 'dashboard' && <Dashboard />}
+                        {currentSection === 'create' && <OCRPortfolioCreator />}
+                        {currentSection === 'portfolios' && <PortfolioManagement />}
+                    </main>
+                </div>
+            );
+        };
+
+        // Render App
+        ReactDOM.render(
+            <AuthProvider>
+                <App />
+            </AuthProvider>,
+            document.getElementById('root')
+        );
+    </script>
+</body>
+</html>

@@ -1,259 +1,223 @@
-# Investment Portfolio Manager
+# Portfolio Manager Pro 🚀
 
-A professional investment portfolio management application built with React, Node.js, and PostgreSQL.
+Un sistema profesional de gestión de carteras de inversión con análisis en tiempo real, OCR para extracción de activos desde imágenes, y una interfaz moderna y responsiva.
 
-## Features
+## ✨ Características Principales
 
-- **User Management**: Secure authentication with JWT tokens
-- **Portfolio Management**: Create, edit, and delete investment portfolios
-- **Asset Tracking**: Add and manage individual assets with real-time pricing
-- **OCR Integration**: Extract asset information from document photos using Tesseract.js
-- **Financial Data**: Real-time stock prices and historical data via Yahoo Finance API
-- **Interactive Charts**: Visualize portfolio performance with Chart.js
-- **Admin Panel**: Comprehensive admin interface for user and portfolio management
-- **Responsive Design**: Professional UI that works on all devices
+- **📊 Dashboard Completo**: Vista general con estadísticas en tiempo real
+- **💼 Gestión de Carteras**: Crear, editar y eliminar carteras de inversión
+- **📈 Precios en Tiempo Real**: Integración con Yahoo Finance API
+- **🔍 OCR Inteligente**: Extracción automática de activos desde imágenes
+- **📱 Diseño Responsivo**: Funciona perfectamente en móviles y escritorio
+- **🎨 UI/UX Moderna**: Interfaz profesional con animaciones suaves
+- **💾 Base de Datos SQLite**: Almacenamiento local eficiente
+- **🔄 Actualización Automática**: Precios actualizados cada 5 minutos
 
-## Tech Stack
-
-### Frontend
-- React 18
-- Tailwind CSS
-- Chart.js / React-ChartJS-2
-- Axios
-- React Router DOM
-- React Hot Toast
+## 🛠️ Tecnologías Utilizadas
 
 ### Backend
-- Node.js
-- Express.js
-- PostgreSQL
-- JWT Authentication
-- Bcrypt
-- Multer (file uploads)
-- Tesseract.js (OCR)
-- Axios (API calls)
+- **Node.js** - Runtime de JavaScript
+- **Express.js** - Framework web
+- **SQLite3** - Base de datos local
+- **Multer** - Manejo de archivos
+- **CORS** - Configuración de acceso cruzado
 
-## Quick Start
+### Frontend
+- **HTML5** - Estructura semántica
+- **CSS3** - Estilos modernos con variables CSS
+- **JavaScript ES6+** - Lógica de la aplicación
+- **Font Awesome** - Iconografía profesional
+- **Fetch API** - Comunicación con el backend
 
-### Prerequisites
-- Node.js 16+ 
-- PostgreSQL 12+
-- npm or yarn
+## 🚀 Instalación y Uso
 
-### Installation
+### Prerrequisitos
+- Node.js 16+ instalado
+- NPM o Yarn
 
-1. **Clone the repository**
+### Pasos de Instalación
+
+1. **Clonar o descargar el proyecto**
    ```bash
-   git clone <repository-url>
-   cd investment-portfolio-manager
+   cd portfolio-manager-pro
    ```
 
-2. **Install dependencies**
+2. **Instalar dependencias**
    ```bash
-   npm run install-all
+   npm install
    ```
 
-3. **Set up the database**
+3. **Iniciar el servidor**
    ```bash
-   # Create PostgreSQL database
-   createdb investment_portfolio
-   
-   # Update server/.env with your database credentials
-   cp server/.env.example server/.env
+   npm start
    ```
 
-4. **Configure environment variables**
-   ```bash
-   # Edit server/.env
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_NAME=investment_portfolio
-   DB_USER=your_db_user
-   DB_PASSWORD=your_db_password
-   JWT_SECRET=your-super-secret-jwt-key
-   ```
+4. **Acceder a la aplicación**
+   - Abrir navegador en: `http://localhost:5000`
+   - El servidor se ejecuta en el puerto 5000
 
-5. **Start the application**
-   ```bash
-   npm run dev
-   ```
+## 📋 Funcionalidades Detalladas
 
-6. **Access the application**
-   - Frontend: http://localhost:3000
-   - Backend: http://localhost:5000
+### Dashboard
+- **Estadísticas Generales**: Valor total, ganancias/pérdidas, número de carteras y activos
+- **Resumen de Carteras**: Vista rápida de todas las carteras con métricas clave
+- **Actualización Automática**: Datos refrescados cada 30 segundos
 
-### Default Admin Account
-- Email: admin@portfolio.com
-- Password: admin123
+### Gestión de Carteras
+- **Crear Cartera**: Desde imagen OCR o entrada manual
+- **Editar Cartera**: Modificar nombre y descripción
+- **Eliminar Cartera**: Borrado completo con confirmación
+- **Vista Detallada**: Análisis completo de cada cartera
 
-## Project Structure
+### OCR Inteligente
+- **Subida de Imágenes**: Soporte para PNG, JPG, JPEG
+- **Extracción Automática**: Detección de símbolos y cantidades
+- **Entrada Manual**: Fallback para activos específicos
+- **Validación**: Verificación de símbolos válidos
 
-```
-investment-portfolio-manager/
-├── client/                 # React frontend
-│   ├── public/
-│   ├── src/
-│   │   ├── components/     # Reusable components
-│   │   ├── contexts/       # React contexts
-│   │   ├── pages/          # Page components
-│   │   └── App.js         # Main app component
-│   ├── package.json
-│   └── tailwind.config.js
-├── server/                 # Node.js backend
-│   ├── config/            # Database configuration
-│   ├── middleware/        # Express middleware
-│   ├── routes/            # API routes
-│   ├── index.js          # Server entry point
-│   └── package.json
-├── package.json           # Root package.json
-└── README.md
-```
+### Análisis de Activos
+- **Precios Actuales**: Obtenidos de Yahoo Finance
+- **Cálculo de Ganancias**: Comparación con precio de compra
+- **Métricas de Rendimiento**: Porcentajes de ganancia/pérdida
+- **Historial de Precios**: Seguimiento temporal
 
-## API Endpoints
+## 🔧 API Endpoints
 
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/profile` - Get user profile
-- `PUT /api/auth/profile` - Update user profile
+### Carteras
+- `GET /api/portfolios` - Obtener todas las carteras
+- `GET /api/portfolios/:id` - Obtener cartera específica
+- `POST /api/portfolios` - Crear nueva cartera
+- `POST /api/portfolios/ocr` - Crear cartera desde imagen
+- `PUT /api/portfolios/:id` - Actualizar cartera
+- `DELETE /api/portfolios/:id` - Eliminar cartera
 
-### Portfolios
-- `GET /api/portfolios` - Get user's portfolios
-- `GET /api/portfolios/:id` - Get specific portfolio
-- `POST /api/portfolios` - Create new portfolio
-- `PUT /api/portfolios/:id` - Update portfolio
-- `DELETE /api/portfolios/:id` - Delete portfolio
+### Activos
+- `GET /api/assets` - Obtener todos los activos
+- `POST /api/assets` - Agregar activo
+- `PUT /api/assets/:id` - Actualizar activo
+- `DELETE /api/assets/:id` - Eliminar activo
 
-### Assets
-- `GET /api/assets/portfolio/:portfolioId` - Get portfolio assets
-- `GET /api/assets/:id` - Get specific asset
-- `POST /api/assets` - Create new asset
-- `PUT /api/assets/:id` - Update asset
-- `DELETE /api/assets/:id` - Delete asset
+### Precios
+- `GET /api/prices/:symbol` - Obtener precio de símbolo
+- `POST /api/prices/update` - Actualizar todos los precios
 
-### Financial Data
-- `GET /api/financial/quote/:symbol` - Get stock quote
-- `GET /api/financial/historical/:symbol` - Get historical data
-- `POST /api/financial/update-prices/:portfolioId` - Update portfolio prices
-- `GET /api/financial/search` - Search for symbols
+### Estadísticas
+- `GET /api/stats` - Obtener estadísticas generales
 
-### OCR
-- `POST /api/ocr/process` - Process image with OCR
-- `POST /api/ocr/process-text` - Process manual text
-- `GET /api/ocr/history` - Get OCR history
+## 📱 Diseño Responsivo
 
-### Admin
-- `GET /api/admin/users` - Get all users
-- `GET /api/admin/users/:id` - Get user details
-- `PUT /api/admin/users/:id/role` - Update user role
-- `DELETE /api/admin/users/:id` - Delete user
-- `GET /api/admin/portfolios` - Get all portfolios
-- `GET /api/admin/stats` - Get system statistics
+El diseño se adapta perfectamente a diferentes tamaños de pantalla:
 
-## Deployment
+- **Desktop**: Sidebar fijo con navegación completa
+- **Tablet**: Layout optimizado para pantallas medianas
+- **Mobile**: Navegación colapsable y cards apiladas
 
-### Using Docker
+## 🎨 Características de UI/UX
 
-1. **Create Dockerfile**
-   ```dockerfile
-   # Dockerfile
-   FROM node:16-alpine
-   WORKDIR /app
-   COPY package*.json ./
-   RUN npm install
-   COPY . .
-   RUN npm run build
-   EXPOSE 3000
-   CMD ["npm", "start"]
-   ```
+- **Gradientes Modernos**: Fondos atractivos y profesionales
+- **Animaciones Suaves**: Transiciones fluidas entre estados
+- **Iconografía Consistente**: Font Awesome para todos los iconos
+- **Feedback Visual**: Alertas y mensajes informativos
+- **Loading States**: Indicadores de carga durante operaciones
+- **Hover Effects**: Interacciones visuales en elementos
 
-2. **Create docker-compose.yml**
-   ```yaml
-   version: '3.8'
-   services:
-     db:
-       image: postgres:13
-       environment:
-         POSTGRES_DB: investment_portfolio
-         POSTGRES_USER: postgres
-         POSTGRES_PASSWORD: password
-       volumes:
-         - postgres_data:/var/lib/postgresql/data
-       ports:
-         - "5432:5432"
-   
-     server:
-       build: ./server
-       environment:
-         DB_HOST: db
-         DB_NAME: investment_portfolio
-         DB_USER: postgres
-         DB_PASSWORD: password
-       depends_on:
-         - db
-       ports:
-         - "5000:5000"
-   
-     client:
-       build: ./client
-       ports:
-         - "3000:3000"
-   
-   volumes:
-     postgres_data:
-   ```
+## 🔒 Seguridad
 
-3. **Deploy**
-   ```bash
-   docker-compose up -d
-   ```
+- **Validación de Archivos**: Solo imágenes permitidas
+- **Sanitización de Datos**: Limpieza de entradas del usuario
+- **Límites de Tamaño**: Archivos máximo 10MB
+- **CORS Configurado**: Acceso controlado desde frontend
 
-### Manual Deployment
+## 📊 Base de Datos
 
-#### Frontend (Vercel/Netlify)
-1. Build the client: `cd client && npm run build`
-2. Deploy the `build` folder to your hosting service
-3. Set environment variables for API URL
+### Esquema SQLite
+- **portfolios**: Información de carteras
+- **assets**: Activos individuales
+- **transactions**: Historial de transacciones
+- **price_history**: Seguimiento de precios
 
-#### Backend (Railway/Render/Heroku)
-1. Set up PostgreSQL database
-2. Configure environment variables
-3. Deploy the server folder
-4. Update client API base URL
+### Características
+- **Relaciones**: Claves foráneas entre tablas
+- **Índices**: Optimización de consultas
+- **Timestamps**: Fechas de creación y actualización
+- **Cascading**: Eliminación en cascada
 
-## Environment Variables
+## 🚀 Despliegue
 
-### Server (.env)
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=investment_portfolio
-DB_USER=postgres
-DB_PASSWORD=password
-JWT_SECRET=your-super-secret-jwt-key
-JWT_EXPIRES_IN=7d
-PORT=5000
-NODE_ENV=production
-CLIENT_URL=https://your-frontend-url.com
-YAHOO_FINANCE_API_KEY=your-api-key
-ALPHA_VANTAGE_API_KEY=your-api-key
-TESSERACT_LANG=eng
-MAX_FILE_SIZE=10485760
-UPLOAD_PATH=./uploads
+### Desarrollo Local
+```bash
+npm start
 ```
 
-## Contributing
+### Producción
+   ```bash
+NODE_ENV=production npm start
+```
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit changes: `git commit -am 'Add feature'`
-4. Push to branch: `git push origin feature-name`
-5. Submit a pull request
+### Variables de Entorno
+- `PORT`: Puerto del servidor (default: 5000)
+- `NODE_ENV`: Entorno de ejecución
 
-## License
+## 🔄 Mantenimiento
 
-MIT License - see LICENSE file for details
+### Actualización de Precios
+- **Automática**: Cada 5 minutos
+- **Manual**: Botón de actualización en UI
+- **API**: Endpoint dedicado para actualización
 
-## Support
+### Limpieza de Datos
+- **Archivos**: Limpieza automática de uploads temporales
+- **Base de Datos**: Mantenimiento automático de índices
 
-For support, email support@portfolio-manager.com or create an issue in the repository.
+## 🐛 Solución de Problemas
+
+### Servidor no inicia
+- Verificar que el puerto 5000 esté libre
+- Comprobar instalación de Node.js
+- Revisar dependencias: `npm install`
+
+### Precios no se actualizan
+- Verificar conexión a internet
+- Comprobar acceso a Yahoo Finance
+- Revisar logs del servidor
+
+### OCR no funciona
+- Verificar formato de imagen (PNG, JPG)
+- Comprobar tamaño del archivo (< 10MB)
+- Usar entrada manual como alternativa
+
+## 📈 Roadmap Futuro
+
+- [ ] **Autenticación de Usuarios**: Sistema de login/registro
+- [ ] **Múltiples Carteras por Usuario**: Gestión de usuarios
+- [ ] **Gráficos Avanzados**: Chart.js para visualizaciones
+- [ ] **Exportación de Datos**: PDF y Excel
+- [ ] **Notificaciones**: Alertas de precios
+- [ ] **API Externa**: Integración con más fuentes de datos
+- [ ] **Modo Oscuro**: Tema alternativo
+- [ ] **PWA**: Aplicación web progresiva
+
+## 📄 Licencia
+
+MIT License - Ver archivo LICENSE para detalles
+
+## 🤝 Contribuciones
+
+Las contribuciones son bienvenidas. Por favor:
+
+1. Fork el proyecto
+2. Crea una rama para tu feature
+3. Commit tus cambios
+4. Push a la rama
+5. Abre un Pull Request
+
+## 📞 Soporte
+
+Para soporte técnico o preguntas:
+- Crear un issue en el repositorio
+- Revisar la documentación
+- Verificar logs del servidor
+
+---
+
+**Portfolio Manager Pro** - Gestión profesional de carteras de inversión 🚀

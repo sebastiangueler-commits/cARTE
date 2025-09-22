@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Manager - Sistema de Gestión de Inversiones</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #1a1a1a;
+            --primary-dark: #000000;
+            --secondary-color: #6b7280;
+            --success-color: #059669;
+            --danger-color: #dc2626;
+            --warning-color: #d97706;
+            --dark-color: #111827;
+            --light-color: #f9fafb;
+            --border-color: #e5e7eb;
+            --sidebar-width: 280px;
+            --header-height: 60px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #ffffff;
+            color: var(--dark-color);
+            overflow-x: hidden;
+        }
+
+        /* Login Screen */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: white;
+            font-size: 24px;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--primary-color);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .sidebar-logo {
+            width: 32px;
+            height: 32px;
+            background: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: var(--primary-color);
+            font-size: 16px;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            margin: 0.25rem 0;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .nav-link i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .content-header {
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .content-body {
+            padding: 2rem;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            background: var(--light-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon.primary { background: var(--primary-color); color: white; }
+        .stat-icon.success { background: var(--success-color); color: white; }
+        .stat-icon.danger { background: var(--danger-color); color: white; }
+        .stat-icon.warning { background: var(--warning-color); color: white; }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 6px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Tables */
+        .table th {
+            background: var(--light-color);
+            border: none;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .table td {
+            border: none;
+            vertical-align: middle;
+        }
+
+        .table tbody tr {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .text-success { color: var(--success-color) !important; }
+        .text-danger { color: var(--danger-color) !important; }
+
+        /* Hidden */
+        .hidden { display: none !important; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .content-body {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <h2>Portfolio Manager</h2>
+                <p class="text-muted">Sistema de Gestión de Inversiones</p>
+            </div>
+            
+            <form id="login-form">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Usuario o Email</label>
+                    <input type="text" class="form-control" id="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                    </button>
+                </div>
+                <div class="text-center">
+                    <!-- Botón de registro removido - solo admin puede crear usuarios desde el dashboard -->
+                </div>
+            </form>
+            
+            <form id="register-form" class="hidden">
+                <div class="mb-3">
+                    <label for="reg-username" class="form-label">Usuario</label>
+                    <input type="text" class="form-control" id="reg-username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="reg-email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="reg-email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="reg-fullname" class="form-label">Nombre Completo</label>
+                    <input type="text" class="form-control" id="reg-fullname" required>
+                </div>
+                <div class="mb-3">
+                    <label for="reg-password" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="reg-password" required>
+                </div>
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Crear Cuenta
+                    </button>
+                </div>
+                <div class="text-center">
+                    <button type="button" class="btn btn-link" onclick="showLoginForm()">
+                        ¿Ya tienes cuenta? Inicia sesión
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="main-app" class="main-layout hidden">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <div class="sidebar-logo">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    Portfolio Manager
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-item">
+                    <a href="#" class="nav-link active" onclick="showDashboard()">
+                        <i class="fas fa-home"></i>
+                        Dashboard
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link" onclick="showPortfolios()">
+                        <i class="fas fa-briefcase"></i>
+                        Carteras
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link" onclick="showSettings()">
+                        <i class="fas fa-cog"></i>
+                        Configuración
+                    </a>
+                </div>
+                <div class="nav-item" id="admin-users-nav" style="display: none;">
+                    <a href="#" class="nav-link" onclick="showUserManagement()">
+                        <i class="fas fa-users"></i>
+                        Gestión de Usuarios
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link" onclick="showReports()">
+                        <i class="fas fa-chart-line"></i>
+                        Reportes
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Cerrar Sesión
+                    </a>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="content-header">
+                <h4 id="page-title">Dashboard</h4>
+                <div class="ms-auto">
+                    <span class="text-muted">Bienvenido, </span>
+                    <strong id="user-name">Usuario</strong>
+                </div>
+            </div>
+            
+            <div class="content-body">
+                <!-- Dashboard Content -->
+                <div id="dashboard-content">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon primary">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <div class="stat-value" id="total-assets">-</div>
+                            <div class="stat-label">Total Activos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon success">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="stat-value" id="total-value">-</div>
+                            <div class="stat-label">Valor Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon warning">
+                                <i class="fas fa-trending-up"></i>
+                            </div>
+                            <div class="stat-value" id="total-gain">-</div>
+                            <div class="stat-label">Ganancia Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon danger">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="stat-value" id="total-gain-percent">-</div>
+                            <div class="stat-label">% Ganancia</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Resumen de Carteras
+                        </div>
+                        <div class="card-body">
+                            <div id="portfolios-summary">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other Content Areas -->
+                <div id="other-content" class="hidden">
+                    <!-- Content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = null;
+        let portfolios = [];
+        let assets = [];
+        let isAdmin = false;
+        let updateInterval = null;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            if (authToken) {
+                verifyToken();
+            } else {
+                showLoginScreen();
+            }
+        });
+
+        // Authentication functions
+        async function verifyToken() {
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/verify`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data.user;
+                    isAdmin = data.user.username === 'admin';
+                    showMainApp();
+                    loadDashboard();
+                } else {
+                    localStorage.removeItem('authToken');
+                    showLoginScreen();
+                }
+            } catch (error) {
+                localStorage.removeItem('authToken');
+                showLoginScreen();
+            }
+        }
+
+        function showLoginScreen() {
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('hidden');
+        }
+
+        function showMainApp() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('user-name').textContent = currentUser.fullName || currentUser.username;
+            
+            // Mostrar opción de gestión de usuarios solo para admin
+            const adminUsersNav = document.getElementById('admin-users-nav');
+            if (adminUsersNav) {
+                adminUsersNav.style.display = isAdmin ? 'block' : 'none';
+            }
+        }
+
+        // Login form
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    currentUser = data.user;
+                    isAdmin = data.user.username === 'admin';
+                    localStorage.setItem('authToken', authToken);
+                    showMainApp();
+                    loadDashboard();
+                } else {
+                    alert(data.error || 'Error en el login');
+                }
+            } catch (error) {
+                alert('Error de conexión');
+            }
+        });
+
+        // Register form
+        document.getElementById('register-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value;
+            const fullName = document.getElementById('reg-fullname').value;
+            const password = document.getElementById('reg-password').value;
+            
+            try {
+                console.log('🔐 Intentando crear cuenta:', { username, email, fullName });
+                console.log('🔐 Token actual:', authToken);
+                console.log('🔐 Usuario actual:', currentUser);
+                console.log('🔐 Es admin:', isAdmin);
+                
+                const response = await fetch(`${API_BASE}/api/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ username, email, fullName, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert(data.message || 'Usuario creado exitosamente');
+                    // Limpiar formulario
+                    document.getElementById('reg-username').value = '';
+                    document.getElementById('reg-email').value = '';
+                    document.getElementById('reg-fullname').value = '';
+                    document.getElementById('reg-password').value = '';
+                    // Volver al formulario de login
+                    document.getElementById('register-form').classList.add('hidden');
+                    document.getElementById('login-form').classList.remove('hidden');
+                } else {
+                    alert(data.error || 'Error en el registro');
+                }
+            } catch (error) {
+                alert('Error de conexión');
+            }
+        });
+
+        function showLoginForm() {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('register-form').classList.add('hidden');
+        }
+
+        function showRegisterForm() {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('register-form').classList.remove('hidden');
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            authToken = null;
+            currentUser = null;
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+            showLoginScreen();
+        }
+
+        // Navigation functions
+        function showDashboard() {
+            setActiveNav('dashboard');
+            document.getElementById('page-title').textContent = 'Dashboard';
+            document.getElementById('dashboard-content').classList.remove('hidden');
+            document.getElementById('other-content').classList.add('hidden');
+            loadDashboard();
+        }
+
+        function showPortfolios() {
+            setActiveNav('portfolios');
+            document.getElementById('page-title').textContent = 'Carteras';
+            document.getElementById('dashboard-content').classList.add('hidden');
+            document.getElementById('other-content').classList.remove('hidden');
+            loadPortfolios();
+        }
+
+        function showSettings() {
+            setActiveNav('settings');
+            document.getElementById('page-title').textContent = 'Configuración';
+            document.getElementById('dashboard-content').classList.add('hidden');
+            document.getElementById('other-content').classList.remove('hidden');
+            loadSettings();
+        }
+
+        function showReports() {
+            setActiveNav('reports');
+            document.getElementById('page-title').textContent = 'Reportes';
+            document.getElementById('dashboard-content').classList.add('hidden');
+            document.getElementById('other-content').classList.remove('hidden');
+            loadReports();
+        }
+
+        function showUserManagement() {
+            setActiveNav('users');
+            document.getElementById('page-title').textContent = 'Gestión de Usuarios';
+            document.getElementById('dashboard-content').classList.add('hidden');
+            document.getElementById('other-content').classList.remove('hidden');
+            loadUserManagement();
+        }
+
+        function setActiveNav(page) {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // Data loading functions
+        async function loadDashboard() {
+            try {
+                const response = await fetch(`${API_BASE}/api/portfolios`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                portfolios = await response.json();
+                if (portfolios && portfolios.value) {
+                    portfolios = portfolios.value;
+                }
+                
+                updateDashboardStats();
+                renderPortfoliosSummary();
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        function updateDashboardStats() {
+            const totalAssets = portfolios.reduce((sum, p) => sum + (p.asset_count || 0), 0);
+            const totalValue = portfolios.reduce((sum, p) => sum + (p.total_value || 0), 0);
+            const totalCost = portfolios.reduce((sum, p) => sum + (p.total_cost || 0), 0);
+            const totalGain = totalValue - totalCost;
+            const totalGainPercent = totalCost > 0 ? (totalGain / totalCost) * 100 : 0;
+
+            document.getElementById('total-assets').textContent = totalAssets.toLocaleString();
+            document.getElementById('total-value').textContent = `$${totalValue.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            
+            const gainElement = document.getElementById('total-gain');
+            gainElement.textContent = `${totalGain >= 0 ? '+' : ''}$${totalGain.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            gainElement.className = `stat-value ${totalGain >= 0 ? 'text-success' : 'text-danger'}`;
+            
+            const gainPercentElement = document.getElementById('total-gain-percent');
+            gainPercentElement.textContent = `${totalGainPercent >= 0 ? '+' : ''}${totalGainPercent.toFixed(2)}%`;
+            gainPercentElement.className = `stat-value ${totalGainPercent >= 0 ? 'text-success' : 'text-danger'}`;
+        }
+
+        function renderPortfoliosSummary() {
+            const container = document.getElementById('portfolios-summary');
+            
+            if (portfolios.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-briefcase text-muted" style="font-size: 3rem;"></i>
+                        <h4 class="mt-3">No hay carteras</h4>
+                        <p class="text-muted">Comienza creando tu primera cartera de inversión</p>
+                        <button class="btn btn-primary" onclick="showPortfolios()">
+                            <i class="fas fa-plus"></i> Nueva Cartera
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="row">
+                    ${portfolios.map(portfolio => `
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">${portfolio.name}</h5>
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="text-muted small">Activos</div>
+                                            <div class="fw-bold">${portfolio.asset_count}</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="text-muted small">Valor</div>
+                                            <div class="fw-bold">$${portfolio.total_value ? portfolio.total_value.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '0'}</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="text-muted small">Ganancia</div>
+                                            <div class="fw-bold ${portfolio.total_gain_loss >= 0 ? 'text-success' : 'text-danger'}">
+                                                ${portfolio.total_gain_loss >= 0 ? '+' : ''}$${portfolio.total_gain_loss ? portfolio.total_gain_loss.toFixed(0) : '0'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        async function loadPortfolios() {
+            document.getElementById('other-content').innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/portfolios`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                portfolios = await response.json();
+                if (portfolios && portfolios.value) {
+                    portfolios = portfolios.value;
+                }
+                
+                renderPortfoliosManagement();
+            } catch (error) {
+                console.error('Error loading portfolios:', error);
+                document.getElementById('other-content').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error cargando carteras: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function renderPortfoliosManagement() {
+            document.getElementById('other-content').innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4>Gestión de Carteras</h4>
+                    <button class="btn btn-primary" onclick="showCreatePortfolioModal()">
+                        <i class="fas fa-plus me-2"></i>Nueva Cartera
+                    </button>
+                </div>
+
+                <div class="row">
+                    ${portfolios.length === 0 ? `
+                        <div class="col-12">
+                            <div class="card text-center py-5">
+                                <div class="card-body">
+                                    <i class="fas fa-briefcase text-muted" style="font-size: 4rem;"></i>
+                                    <h4 class="mt-3">No hay carteras</h4>
+                                    <p class="text-muted">Comienza creando tu primera cartera de inversión</p>
+                                    <button class="btn btn-primary" onclick="showCreatePortfolioModal()">
+                                        <i class="fas fa-plus me-2"></i>Crear Primera Cartera
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ` : portfolios.map(portfolio => `
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">${portfolio.name}</h6>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#" onclick="viewPortfolioDetails(${portfolio.id})">
+                                                <i class="fas fa-eye me-2"></i>Ver Detalles
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="uploadToPortfolio(${portfolio.id})">
+                                                <i class="fas fa-upload me-2"></i>Subir Imagen OCR
+                                            </a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="#" onclick="deletePortfolio(${portfolio.id})">
+                                                <i class="fas fa-trash me-2"></i>Eliminar
+                                            </a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    ${portfolio.description ? `<p class="text-muted small">${portfolio.description}</p>` : ''}
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="text-muted small">Activos</div>
+                                            <div class="fw-bold">${portfolio.asset_count || 0}</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="text-muted small">Valor</div>
+                                            <div class="fw-bold">$${portfolio.total_value ? portfolio.total_value.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '0'}</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="text-muted small">Ganancia</div>
+                                            <div class="fw-bold ${portfolio.total_gain_loss >= 0 ? 'text-success' : 'text-danger'}">
+                                                ${portfolio.total_gain_loss >= 0 ? '+' : ''}$${portfolio.total_gain_loss ? portfolio.total_gain_loss.toFixed(0) : '0'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function showCreatePortfolioModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-plus me-2"></i>Nueva Cartera
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="create-portfolio-form">
+                                <div class="mb-3">
+                                    <label for="portfolio-name" class="form-label">Nombre de la Cartera</label>
+                                    <input type="text" class="form-control" id="portfolio-name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="portfolio-description" class="form-label">Descripción (opcional)</label>
+                                    <textarea class="form-control" id="portfolio-description" rows="3"></textarea>
+                                </div>
+                                
+                                <hr class="my-4">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-camera me-2"></i>Subir Imagen del Portfolio (OCR)
+                                    </label>
+                                    <input type="file" class="form-control" id="portfolio-image" accept="image/*">
+                                    <div class="form-text">Sube una imagen de tu portfolio para extraer automáticamente los activos</div>
+                                </div>
+                                
+                                <div id="image-preview" class="text-center mb-3" style="display: none;">
+                                    <img id="preview-img" class="img-fluid rounded" style="max-height: 200px;">
+                                </div>
+                                
+                                <div id="upload-progress" class="progress mb-3" style="display: none;">
+                                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                
+                                <div id="upload-result"></div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary" onclick="createPortfolioWithOCR()" id="create-btn">
+                                <i class="fas fa-save me-2"></i>Crear Cartera
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            new bootstrap.Modal(modal).show();
+            
+            // Preview de imagen
+            document.getElementById('portfolio-image').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('preview-img').src = e.target.result;
+                        document.getElementById('image-preview').style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            modal.addEventListener('hidden.bs.modal', () => {
+                modal.remove();
+            });
+        }
+
+        async function createPortfolioWithOCR() {
+            const name = document.getElementById('portfolio-name').value;
+            const description = document.getElementById('portfolio-description').value;
+            const imageFile = document.getElementById('portfolio-image').files[0];
+            
+            if (!name.trim()) {
+                alert('El nombre de la cartera es requerido');
+                return;
+            }
+            
+            // Mostrar progreso
+            document.getElementById('upload-progress').style.display = 'block';
+            document.getElementById('create-btn').disabled = true;
+            
+            try {
+                // Primero crear la cartera
+                const portfolioResponse = await fetch(`${API_BASE}/api/portfolios`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ name: name.trim(), description: description.trim() })
+                });
+                
+                const portfolioData = await portfolioResponse.json();
+                
+                if (!portfolioResponse.ok) {
+                    throw new Error(portfolioData.error || 'Error creando la cartera');
+                }
+                
+                // Si hay imagen, procesarla con OCR
+                if (imageFile) {
+                    const formData = new FormData();
+                    formData.append('image', imageFile);
+                    formData.append('portfolio_id', portfolioData.id);
+                    
+                    const ocrResponse = await fetch(`${API_BASE}/api/upload`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: formData
+                    });
+                    
+                    const ocrData = await ocrResponse.json();
+                    
+                    if (ocrResponse.ok) {
+                        document.getElementById('upload-result').innerHTML = `
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Cartera creada exitosamente con ${ocrData.assets ? ocrData.assets.length : 0} activos extraídos
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('upload-result').innerHTML = `
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Cartera creada pero error procesando imagen: ${ocrData.error}
+                            </div>
+                        `;
+                    }
+                } else {
+                    document.getElementById('upload-result').innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Cartera creada exitosamente
+                        </div>
+                    `;
+                }
+                
+                // Recargar carteras después de un momento
+                setTimeout(async () => {
+                    await loadPortfolios();
+                    const modal = document.querySelector('.modal');
+                    bootstrap.Modal.getInstance(modal).hide();
+                }, 2000);
+                
+            } catch (error) {
+                document.getElementById('upload-result').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error: ${error.message}
+                    </div>
+                `;
+                document.getElementById('create-btn').disabled = false;
+            }
+        }
+
+        async function deletePortfolio(id) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta cartera? Esta acción no se puede deshacer.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/portfolios/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    await loadPortfolios();
+                    alert('Cartera eliminada exitosamente');
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Error eliminando la cartera');
+                }
+            } catch (error) {
+                alert('Error de conexión');
+            }
+        }
+
+        function loadSettings() {
+            document.getElementById('other-content').innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-cog me-2"></i>
+                        Configuración
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Intervalo de Actualización</h5>
+                                <div class="mb-3">
+                                    <label class="form-label">Frecuencia de actualización de precios</label>
+                                    <select class="form-select" id="update-interval">
+                                        <option value="60000">1 minuto</option>
+                                        <option value="300000" selected>5 minutos</option>
+                                        <option value="900000">15 minutos</option>
+                                        <option value="1800000">30 minutos</option>
+                                        <option value="3600000">1 hora</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="saveSettings()">
+                                    <i class="fas fa-save me-2"></i>Guardar Configuración
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Alertas</h5>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="price-alerts">
+                                    <label class="form-check-label" for="price-alerts">
+                                        Alertas de precio
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="email-notifications">
+                                    <label class="form-check-label" for="email-notifications">
+                                        Notificaciones por email
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadReports() {
+            document.getElementById('other-content').innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Reportes
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Sistema de reportes en desarrollo...</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadUserManagement() {
+            document.getElementById('other-content').innerHTML = `
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-users me-2"></i>
+                                    Usuarios Registrados
+                                </div>
+                                <button class="btn btn-primary btn-sm" onclick="showCreateUserModal()">
+                                    <i class="fas fa-user-plus me-2"></i>Nuevo Usuario
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="users-list">
+                                    <div class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                        <p class="mt-2 text-muted">Cargando usuarios...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Información
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted">
+                                    <strong>Administrador:</strong> Solo tú puedes crear y gestionar usuarios del sistema.
+                                </p>
+                                <hr>
+                                <h6>Permisos de Usuario:</h6>
+                                <ul class="list-unstyled text-muted">
+                                    <li>• Crear y gestionar carteras</li>
+                                    <li>• Subir imágenes OCR</li>
+                                    <li>• Ver precios en tiempo real</li>
+                                    <li>• Generar reportes</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            loadUsers();
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE}/api/users`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const users = await response.json();
+                    renderUsersList(users);
+                } else {
+                    document.getElementById('users-list').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Error cargando usuarios
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('users-list').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error de conexión
+                    </div>
+                `;
+            }
+        }
+
+        function renderUsersList(users) {
+            if (users.length === 0) {
+                document.getElementById('users-list').innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="fas fa-users fa-3x mb-3"></i>
+                        <p>No hay usuarios registrados</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const usersHtml = users.map(user => `
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                    <div>
+                        <h6 class="mb-1">${user.full_name || user.username}</h6>
+                        <small class="text-muted">${user.email}</small>
+                        <br>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            Registrado: ${new Date(user.created_at).toLocaleDateString()}
+                        </small>
+                    </div>
+                    <div>
+                        <span class="badge ${user.username === 'admin' ? 'bg-danger' : 'bg-success'}">
+                            ${user.username === 'admin' ? 'Administrador' : 'Usuario'}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('users-list').innerHTML = usersHtml;
+        }
+
+        function showCreateUserModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-user-plus me-2"></i>Crear Nuevo Usuario
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="create-user-form">
+                                <div class="mb-3">
+                                    <label for="new-username" class="form-label">Usuario</label>
+                                    <input type="text" class="form-control" id="new-username" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="new-email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="new-email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="new-fullname" class="form-label">Nombre Completo</label>
+                                    <input type="text" class="form-control" id="new-fullname" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="new-password" class="form-label">Contraseña</label>
+                                    <input type="password" class="form-control" id="new-password" required>
+                                </div>
+                                <div id="create-user-result"></div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary" onclick="createUser()">
+                                <i class="fas fa-save me-2"></i>Crear Usuario
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            new bootstrap.Modal(modal).show();
+            
+            modal.addEventListener('hidden.bs.modal', () => {
+                modal.remove();
+            });
+        }
+
+        async function createUser() {
+            const username = document.getElementById('new-username').value;
+            const email = document.getElementById('new-email').value;
+            const fullName = document.getElementById('new-fullname').value;
+            const password = document.getElementById('new-password').value;
+            
+            if (!username || !email || !fullName || !password) {
+                document.getElementById('create-user-result').innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Todos los campos son requeridos
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ username, email, fullName, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('create-user-result').innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Usuario creado exitosamente
+                        </div>
+                    `;
+                    
+                    // Limpiar formulario
+                    document.getElementById('new-username').value = '';
+                    document.getElementById('new-email').value = '';
+                    document.getElementById('new-fullname').value = '';
+                    document.getElementById('new-password').value = '';
+                    
+                    // Recargar lista de usuarios
+                    setTimeout(() => {
+                        loadUsers();
+                        const modal = document.querySelector('.modal');
+                        bootstrap.Modal.getInstance(modal).hide();
+                    }, 1500);
+                } else {
+                    document.getElementById('create-user-result').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            ${data.error || 'Error creando usuario'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('create-user-result').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error de conexión
+                    </div>
+                `;
+            }
+        }
+
+        function saveSettings() {
+            const interval = document.getElementById('update-interval').value;
+            const priceAlerts = document.getElementById('price-alerts').checked;
+            const emailNotifications = document.getElementById('email-notifications').checked;
+            
+            // Save settings logic here
+            alert('Configuración guardada exitosamente');
+        }
+
+        function viewPortfolioDetails(id) {
+            const portfolio = portfolios.find(p => p.id === id);
+            if (!portfolio) return;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-chart-pie me-2"></i>${portfolio.name}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="text-muted small">Activos</div>
+                                        <div class="h4">${portfolio.asset_count || 0}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="text-muted small">Valor Total</div>
+                                        <div class="h4">$${portfolio.total_value ? portfolio.total_value.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="text-muted small">Costo Total</div>
+                                        <div class="h4">$${portfolio.total_cost ? portfolio.total_cost.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="text-muted small">Ganancia</div>
+                                        <div class="h4 ${portfolio.total_gain_loss >= 0 ? 'text-success' : 'text-danger'}">
+                                            ${portfolio.total_gain_loss >= 0 ? '+' : ''}$${portfolio.total_gain_loss ? portfolio.total_gain_loss.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${portfolio.assets && portfolio.assets.length > 0 ? `
+                                <h6>Activos</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Símbolo</th>
+                                                <th>Cantidad</th>
+                                                <th>Precio Compra</th>
+                                                <th>Precio Actual</th>
+                                                <th>Ganancia</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${portfolio.assets.map(asset => `
+                                                <tr>
+                                                    <td><strong>${asset.symbol}</strong></td>
+                                                    <td>${asset.quantity}</td>
+                                                    <td>$${asset.purchase_price ? asset.purchase_price.toFixed(2) : '0.00'}</td>
+                                                    <td>$${asset.current_price ? asset.current_price.toFixed(2) : '0.00'}</td>
+                                                    <td class="${asset.gain_loss >= 0 ? 'text-success' : 'text-danger'}">
+                                                        ${asset.gain_loss >= 0 ? '+' : ''}$${asset.gain_loss ? asset.gain_loss.toFixed(2) : '0.00'}
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ` : `
+                                <div class="text-center py-4">
+                                    <i class="fas fa-chart-line text-muted" style="font-size: 3rem;"></i>
+                                    <h5 class="mt-3">No hay activos</h5>
+                                    <p class="text-muted">Sube una imagen con OCR para agregar activos a esta cartera</p>
+                                    <button class="btn btn-primary" onclick="uploadToPortfolio(${portfolio.id})">
+                                        <i class="fas fa-upload me-2"></i>Subir Imagen OCR
+                                    </button>
+                                </div>
+                            `}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="button" class="btn btn-primary" onclick="uploadToPortfolio(${portfolio.id})">
+                                <i class="fas fa-upload me-2"></i>Subir Imagen OCR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            new bootstrap.Modal(modal).show();
+            
+            modal.addEventListener('hidden.bs.modal', () => {
+                modal.remove();
+            });
+        }
+
+        function uploadToPortfolio(portfolioId) {
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-upload me-2"></i>Subir Imagen OCR
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="image-upload" class="form-label">Seleccionar imagen del portfolio</label>
+                                <input type="file" class="form-control" id="image-upload" accept="image/*">
+                                <div class="form-text">Formatos soportados: JPG, PNG, GIF</div>
+                            </div>
+                            <div id="upload-preview" class="text-center" style="display: none;">
+                                <img id="preview-image" class="img-fluid rounded" style="max-height: 300px;">
+                            </div>
+                            <div id="upload-progress" class="progress" style="display: none;">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div id="upload-result"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary" onclick="processOCRUpload(${portfolioId})" id="process-btn" disabled>
+                                <i class="fas fa-cog me-2"></i>Procesar OCR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            new bootstrap.Modal(modal).show();
+            
+            // Preview de imagen
+            document.getElementById('image-upload').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('preview-image').src = e.target.result;
+                        document.getElementById('upload-preview').style.display = 'block';
+                        document.getElementById('process-btn').disabled = false;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            modal.addEventListener('hidden.bs.modal', () => {
+                modal.remove();
+            });
+        }
+
+        async function processOCRUpload(portfolioId) {
+            const fileInput = document.getElementById('image-upload');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Por favor selecciona una imagen');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('portfolio_id', portfolioId);
+            
+            // Mostrar progreso
+            document.getElementById('upload-progress').style.display = 'block';
+            document.getElementById('process-btn').disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('upload-result').innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            ${data.message}
+                            <br><small>Activos detectados: ${data.assets ? data.assets.length : 0}</small>
+                        </div>
+                    `;
+                    
+                    // Recargar carteras después de un momento
+                    setTimeout(async () => {
+                        await loadPortfolios();
+                        const modal = document.querySelector('.modal');
+                        bootstrap.Modal.getInstance(modal).hide();
+                    }, 2000);
+                } else {
+                    document.getElementById('upload-result').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            ${data.error || 'Error procesando la imagen'}
+                        </div>
+                    `;
+                    document.getElementById('process-btn').disabled = false;
+                }
+            } catch (error) {
+                document.getElementById('upload-result').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error de conexión: ${error.message}
+                    </div>
+                `;
+                document.getElementById('process-btn').disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

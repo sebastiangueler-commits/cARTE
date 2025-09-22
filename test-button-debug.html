@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Button Debug</title>
+</head>
+<body>
+    <h1>Test del Botón con Debug</h1>
+    
+    <button onclick="testButton()">Probar Botón</button>
+    
+    <div id="portfolios-container"></div>
+
+    <script>
+        // Simular datos de portfolios
+        let portfolios = [
+            {
+                id: 1,
+                name: "Portfolio Test",
+                asset_count: 2,
+                total_value: 1227.5,
+                total_cost: 1250,
+                total_gain_loss: -22.5,
+                total_gain_loss_percent: -1.8,
+                assets: [
+                    {
+                        symbol: "AAPL",
+                        quantity: 5,
+                        purchase_price: 150,
+                        current_price: 245.5
+                    },
+                    {
+                        symbol: "GOOGL", 
+                        quantity: 2,
+                        purchase_price: 250,
+                        current_price: 254.72
+                    }
+                ]
+            }
+        ];
+
+        function testButton() {
+            console.log('🧪 Iniciando test del botón...');
+            renderPortfolios();
+        }
+
+        function renderPortfolios() {
+            console.log('🎨 renderPortfolios llamado');
+            console.log('📊 Portfolios disponibles:', portfolios);
+            
+            const container = document.getElementById('portfolios-container');
+            container.innerHTML = `
+                <div style="border: 1px solid #ccc; padding: 20px; margin: 10px;">
+                    <h3>${portfolios[0].name}</h3>
+                    <p>ID: ${portfolios[0].id}</p>
+                    <p>Activos: ${portfolios[0].asset_count}</p>
+                    <button onclick="console.log('🖱️ Botón clickeado para portfolio ID:', ${portfolios[0].id}); viewPortfolio(${portfolios[0].id})" style="padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px;">
+                        👁️ Ver Portfolio
+                    </button>
+                </div>
+            `;
+        }
+
+        function viewPortfolio(id) {
+            console.log('🔍 viewPortfolio llamado con ID:', id);
+            console.log('📊 Portfolios disponibles:', portfolios);
+            
+            const portfolio = portfolios.find(p => p.id === id);
+            console.log('🎯 Portfolio encontrado:', portfolio);
+            
+            if (!portfolio) {
+                console.error('❌ Portfolio no encontrado con ID:', id);
+                alert('Portfolio no encontrado con ID: ' + id);
+                return;
+            }
+            
+            // Crear modal simple para debug
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; padding: 20px; border-radius: 8px; max-width: 80%; max-height: 80%; overflow-y: auto;">
+                    <h3>📊 ${portfolio.name}</h3>
+                    <p><strong>ID:</strong> ${portfolio.id}</p>
+                    <p><strong>Activos:</strong> ${portfolio.asset_count || 0}</p>
+                    <p><strong>Valor Total:</strong> $${portfolio.total_value || 0}</p>
+                    <button onclick="this.closest('div').parentElement.remove()" style="margin-top: 10px; padding: 10px;">Cerrar</button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            console.log('✅ Modal simple creado');
+        }
+
+        // Auto-renderizar al cargar
+        window.onload = function() {
+            renderPortfolios();
+        };
+    </script>
+</body>
+</html>
