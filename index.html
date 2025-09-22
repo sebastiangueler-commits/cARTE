@@ -483,7 +483,7 @@
     <script>
         // Detectar si estamos en producción (Netlify) o desarrollo local
         const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-        const API_BASE = isProduction ? '' : 'http://localhost:5000';
+        const API_BASE = isProduction ? '/.netlify/functions/api' : 'http://localhost:5000';
         let authToken = localStorage.getItem('authToken');
         let currentUser = null;
         let portfolios = [];

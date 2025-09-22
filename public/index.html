@@ -568,7 +568,7 @@
         // API Helper - Detectar si estamos en producción o desarrollo
         const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
         const api = {
-            baseUrl: isProduction ? '/.netlify/functions/api/api' : '/api',
+            baseUrl: isProduction ? '/.netlify/functions/api' : '/api',
             
             async request(endpoint, options = {}) {
                 const token = localStorage.getItem('token');
