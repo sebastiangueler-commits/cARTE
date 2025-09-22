@@ -19,12 +19,28 @@ exports.handler = async (event, context) => {
   console.log('🚀 FUNCIÓN EJECUTÁNDOSE:', event.httpMethod, event.path);
 
   try {
-    // Parse the path
-    const path = event.path;
+    // Parse the path - Netlify pasa el path completo
+    let path = event.path;
     const method = event.httpMethod;
     const body = event.body ? JSON.parse(event.body) : {};
 
-    console.log('📋 REQUEST:', { path, method, body });
+    // Si el path es solo "/", usar el path completo de la URL
+    if (path === '/') {
+      path = event.rawUrl ? new URL(event.rawUrl).pathname : event.path;
+    }
+
+    // Remover el prefijo de la función si existe
+    if (path.startsWith('/.netlify/functions/api')) {
+      path = path.replace('/.netlify/functions/api', '');
+    }
+
+    console.log('📋 REQUEST:', { 
+      originalPath: event.path, 
+      finalPath: path, 
+      method, 
+      body,
+      rawUrl: event.rawUrl 
+    });
 
     // LOGIN ENDPOINT
     if (path === '/auth/login' && method === 'POST') {
@@ -126,14 +142,22 @@ exports.handler = async (event, context) => {
     }
 
     // DEFAULT - RUTA NO ENCONTRADA
-    console.log('❌ RUTA NO ENCONTRADA:', path);
+    console.log('❌ RUTA NO ENCONTRADA:', {
+      originalPath: event.path,
+      finalPath: path,
+      method: method,
+      rawUrl: event.rawUrl,
+      allEventKeys: Object.keys(event)
+    });
     return {
       statusCode: 404,
       headers,
       body: JSON.stringify({
         error: 'Ruta no encontrada',
-        path: path,
-        method: method
+        originalPath: event.path,
+        finalPath: path,
+        method: method,
+        rawUrl: event.rawUrl
       })
     };
 
